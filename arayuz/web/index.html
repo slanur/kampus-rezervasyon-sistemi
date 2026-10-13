@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<title>Kampüs Kaynak Rezervasyon Sistemi</title>
+<script>
+  // Tema, stil sayfası uygulanmadan ÖNCE belirlenir (yanıp sönmeyi önler).
+  (function () {
+    var kayitli = null;
+    try { kayitli = localStorage.getItem("tema"); } catch (e) {}
+    var tema = kayitli || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "koyu" : "acik");
+    document.documentElement.setAttribute("data-tema", tema);
+  })();
+</script>
+<link rel="stylesheet" href="css/stil.css" />
+</head>
+<body>
+
+<!-- Açılış ekranı: dosya seçilene kadar -->
+<div id="acilis-ekrani">
+  <button class="btn btn-ghost btn-ikon" id="tema-btn-acilis" title="Açık / koyu tema" style="position:absolute; top:18px; right:18px;">☾</button>
+  <div class="marka">KP</div>
+  <h1>Kampüs Kaynak Rezervasyon Sistemi</h1>
+  <p>Başlamak için bir başlangıç dosyası (baslangic.json) seçin</p>
+  <button class="btn btn-primary" id="acilis-dosya-btn" style="margin-top:8px;">Başlangıç dosyası seç</button>
+</div>
+
+<div id="sayfa" style="display:none;">
+  <header id="ustbar">
+    <div id="ustbar-ic">
+      <div class="satir gap-3">
+        <div class="marka">KP</div>
+        <div>
+          <div class="marka-baslik">Kampüs Kaynak Rezervasyon</div>
+          <div class="marka-dosya" id="dosya-adi">baslangic.json</div>
+        </div>
+      </div>
+      <button class="btn btn-mono" id="dosya-degistir-btn">Başlangıç dosyası seç</button>
+
+      <div class="satir gap-2" style="margin-left:auto;">
+        <div class="saat-kutu" id="saat-kutu">
+          <div class="saat-etiket" id="saat-etiket">Simüle saat</div>
+          <div class="saat-deger" id="saat-deger">—</div>
+        </div>
+        <button class="btn btn-secondary btn-mono" id="artir-15-btn">+15dk</button>
+        <button class="btn btn-secondary btn-mono" id="artir-60-btn">+1s</button>
+        <button class="btn btn-secondary btn-mono" id="artir-gun-btn">+4s</button>
+        <button class="btn btn-mono" id="sonraki-olay-btn">⏭ Sonraki olay</button>
+        <button class="btn btn-mono" id="saate-git-btn">Saate git…</button>
+        <div class="ayirac-dikey"></div>
+        <button class="btn btn-danger btn-mono" id="geri-al-btn">↶ Geri al</button>
+        <button class="btn btn-ghost btn-ikon" id="tema-btn" title="Açık / koyu tema">☾</button>
+        <select id="kullanici-secici" class="girdi" style="width:auto; min-width:170px;"></select>
+        <button class="btn btn-primary btn-ikon" id="kullanici-ekle-btn" title="Yeni üye ekle">+</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="govde">
+  <main>
+
+    <!-- Takvim -->
+    <section class="panel" style="padding:0;">
+      <div id="takvim-ust">
+        <div class="takvim-ust-satir">
+          <div>
+            <h2 class="panel-baslik">Kaynak takvimi</h2>
+            <p class="panel-altyazi">Boş alana sürükle → talep formu dolsun</p>
+          </div>
+          <div class="takvim-kontroller">
+            <div class="satir gap-2">
+              <button class="btn btn-ghost btn-ikon" id="gun-geri-btn" style="width:28px;height:28px;">‹</button>
+              <span id="gun-gosterge">—</span>
+              <button class="btn btn-ghost btn-ikon" id="gun-ileri-btn" style="width:28px;height:28px;">›</button>
+              <button class="btn btn-mono" id="bugun-btn">Bugün</button>
+            </div>
+            <div class="oynat-grup">
+              <button class="btn btn-secondary btn-ikon" id="oynat-btn" title="Zamanı oynat / duraklat (Boşluk)">▶</button>
+              <button class="btn btn-ghost btn-mono oynat-hiz" id="oynat-hiz-btn" title="Oynatma hızı (tıkla: değiştir)">5 dk/sn</button>
+            </div>
+          </div>
+        </div>
+        <div class="takvim-ust-satir takvim-alt-satir">
+          <div class="efsane" id="efsane">
+            <span class="efsane-oge"><span class="nokta nokta-ONAYLI"></span>ONAYLI</span>
+            <span class="efsane-oge"><span class="nokta nokta-KULLANIMDA"></span>KULLANIMDA</span>
+            <span class="efsane-oge"><span class="nokta nokta-TAMAMLANDI"></span>TAMAMLANDI</span>
+            <span class="efsane-oge"><span class="nokta nokta-GELMEDI"></span>GELMEDI</span>
+            <span class="efsane-oge"><span class="nokta nokta-IPTAL"></span>IPTAL</span>
+            <span class="efsane-oge"><span class="efsane-desen hatch"></span>Bakım</span>
+            <span class="efsane-oge"><span class="efsane-desen hatch-prep"></span>Hazırlık</span>
+          </div>
+          <label class="onay-kutu"><input type="checkbox" id="filtre-kutusu" />Yalnız seçili kullanıcı</label>
+        </div>
+      </div>
+      <div id="takvim-kaydir">
+        <div id="takvim-govde"></div>
+      </div>
+      <div style="padding:0 20px 16px;">
+        <button class="btn btn-ghost btn-mono" id="kaynak-ekle-btn">+ Kaynak ekle</button>
+      </div>
+    </section>
+
+    <!-- Sonuç banner -->
+    <div id="sonuc-banner-saril" style="display:none;"></div>
+
+    <!-- 3 sütun -->
+    <div id="uc-sutun">
+      <!-- Talep formu -->
+      <section class="panel">
+        <div class="panel-ust">
+          <h2 class="panel-baslik">Talep formu</h2>
+          <div class="segment" id="mod-secici">
+            <span class="segment-opsiyon secili" data-mod="tek">Tek</span>
+            <span class="segment-opsiyon" data-mod="paket">Paket</span>
+          </div>
+        </div>
+        <p class="panel-altyazi" id="talep-altyazi" style="margin-bottom:10px;">— adına</p>
+
+        <div id="kalemler-govde"></div>
+        <div id="oneri-kutu" class="oneri-kutu" style="display:none;"></div>
+
+        <div class="satir gap-2" id="paket-dugmeler" style="display:none; margin-top:2px;">
+          <button class="btn btn-ghost btn-mono" id="kalem-ekle-btn">+ kalem ekle</button>
+          <button class="btn btn-ghost btn-mono" id="kalem-sil-btn">− son kalemi sil</button>
+        </div>
+
+        <div class="ucret-ozet">
+          <div>
+            <div class="ucret-etiket">Tahmini ücret</div>
+            <div class="ucret-toplam" id="ucret-toplam">0 KP</div>
+          </div>
+          <div class="bakiye-ozet">
+            Bakiye <b id="ozet-bakiye">—</b><br />
+            Sonrası <b id="ozet-sonrasi">—</b>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-tam" id="gonder-btn" style="margin-top:10px;">Rezervasyon talep et</button>
+        <datalist id="saat-secenekleri"></datalist>
+      </section>
+
+      <!-- Orta: seçili rezervasyon + kullanıcı paneli -->
+      <div id="orta-sutun">
+        <section class="panel" id="rez-detay-kart" style="display:none;">
+          <div class="panel-ust">
+            <h2 class="panel-baslik" id="rez-detay-baslik">Rezervasyon</h2>
+            <button class="btn btn-ghost btn-mono" id="rez-detay-kapat">kapat</button>
+          </div>
+          <div id="rez-detay-govde" style="font-size:13px; display:grid; grid-template-columns:auto 1fr; gap:4px 12px;"></div>
+          <div id="rez-detay-onizleme" class="panel-altyazi" style="margin-top:8px;"></div>
+          <div class="satir gap-2" style="margin-top:14px;">
+            <button class="btn btn-secondary" id="rd-giris-btn" style="flex:1;">Giriş</button>
+            <button class="btn btn-secondary" id="rd-cikis-btn" style="flex:1;">Çıkış</button>
+            <button class="btn btn-danger" id="rd-iptal-btn" style="flex:1;">İptal</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-ust">
+            <h2 class="panel-baslik" id="kp-ad">—</h2>
+            <span class="rozet-durum mono" id="kp-rol" style="background:var(--secondary); padding:2px 8px; border-radius:6px; font-size:10px;"></span>
+          </div>
+          <div class="stat-izgara">
+            <div class="stat-kart">
+              <div class="stat-etiket">Bakiye</div>
+              <div class="stat-deger" id="kp-bakiye">— <small id="kp-kota"></small></div>
+              <div class="stat-bar"><div class="stat-bar-ic" id="kp-bakiye-bar" style="width:0%;"></div></div>
+            </div>
+            <div class="stat-kart">
+              <div class="stat-etiket">Güvenilirlik</div>
+              <div class="stat-deger" id="kp-guven">— <small>/ 100</small></div>
+              <div class="stat-bar"><div class="stat-bar-ic" id="kp-guven-bar" style="width:0%;"></div></div>
+            </div>
+          </div>
+          <div class="satir gap-2" id="kp-sertifikalar" style="flex-wrap:wrap; margin-top:10px;"></div>
+
+          <div class="panel-altyazi" style="margin-top:14px; text-transform:uppercase; letter-spacing:1px;">Rezervasyonlar</div>
+          <div id="kp-rezliste" style="margin-top:4px; display:flex; flex-direction:column; gap:2px;"></div>
+
+          <div class="panel-altyazi" style="margin-top:12px; text-transform:uppercase; letter-spacing:1px;">Bekleme kayıtları</div>
+          <div id="kp-beklemeliste" style="margin-top:4px; display:flex; flex-direction:column; gap:2px;"></div>
+        </section>
+      </div>
+
+      <!-- Olay günlüğü -->
+      <section class="panel">
+        <div class="panel-ust">
+          <h2 class="panel-baslik">Olay günlüğü</h2>
+          <span class="mono panel-altyazi" id="gunluk-sayac">0 kayıt</span>
+        </div>
+        <div class="satir gap-2" style="margin-bottom:10px;">
+          <select id="gunluk-filtre" class="girdi girdi-sm" style="width:90px;">
+            <option>Tümü</option><option>TAMAM</option><option>RED</option>
+          </select>
+          <input class="girdi girdi-sm" id="gunluk-arama" placeholder="Ara (Ctrl+F)" />
+        </div>
+        <div id="gunluk-liste"></div>
+      </section>
+    </div>
+  </main>
+  </div>
+</div>
+
+<!-- Kullanıcı ekleme modalı -->
+<div class="modal-zemin gizli" id="kullanici-modal">
+  <div class="panel modal-kart">
+    <h2 class="panel-baslik">Yeni Üye Ekle</h2>
+    <p class="panel-altyazi" style="margin-bottom:12px;">Rol ve sertifikalar başlangıç dosyasından seçilir</p>
+    <hr class="ayirac" />
+    <div style="margin-bottom:10px;"><label class="etiket">Kimlik (id)</label><input class="girdi" id="ku-id" placeholder="örn. u4" /></div>
+    <div style="margin-bottom:10px;"><label class="etiket">Ad</label><input class="girdi" id="ku-ad" placeholder="örn. Can Yıldız" /></div>
+    <div style="margin-bottom:10px;"><label class="etiket">Rol</label><select class="girdi" id="ku-rol"></select></div>
+    <div style="margin-bottom:10px;"><label class="etiket">Bakiye (KP)</label><input class="girdi" type="number" id="ku-bakiye" /></div>
+    <div style="margin-bottom:10px;"><label class="etiket">Güvenilirlik</label><input class="girdi" type="number" id="ku-guven" value="100" /></div>
+    <label class="etiket">Sertifikalar</label>
+    <div class="coklu-secim" id="ku-sertifikalar"></div>
+    <div id="ku-sonuc" style="margin:12px 0; display:none; font-size:12.5px;"></div>
+    <div class="satir" style="justify-content:space-between; margin-top:14px;">
+      <button class="btn btn-ghost" data-kapat="kullanici-modal">Kapat</button>
+      <button class="btn btn-primary" id="ku-ekle-btn">+ Ekle</button>
+    </div>
+  </div>
+</div>
+
+<!-- Kaynak ekleme modalı -->
+<div class="modal-zemin gizli" id="kaynak-modal">
+  <div class="panel modal-kart">
+    <h2 class="panel-baslik">Yeni Kaynak Ekle</h2>
+    <p class="panel-altyazi" style="margin-bottom:12px;">Tür ve izinli roller başlangıç dosyasından seçilir</p>
+    <hr class="ayirac" />
+    <div style="margin-bottom:10px;"><label class="etiket">Kimlik (id)</label><input class="girdi" id="kk-id" placeholder="örn. ODA-3" /></div>
+    <div style="margin-bottom:10px;"><label class="etiket">Ad</label><input class="girdi" id="kk-ad" placeholder="örn. Toplantı Odası 3" /></div>
+    <div style="margin-bottom:10px;"><label class="etiket">Tür</label><select class="girdi" id="kk-tur"></select></div>
+    <label class="etiket">İzinli roller</label>
+    <div class="coklu-secim" id="kk-roller"></div>
+    <div id="kk-sonuc" style="margin:12px 0; display:none; font-size:12.5px;"></div>
+    <div class="satir" style="justify-content:space-between; margin-top:14px;">
+      <button class="btn btn-ghost" data-kapat="kaynak-modal">Kapat</button>
+      <button class="btn btn-primary" id="kk-ekle-btn">+ Ekle</button>
+    </div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script src="js/qwebchannel.js"></script>
+<script src="js/kopru.js"></script>
+<script src="js/takvim.js"></script>
+<script src="js/uygulama.js"></script>
+</body>
+</html>

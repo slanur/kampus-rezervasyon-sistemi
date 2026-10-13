@@ -1,0 +1,6 @@
+{"no": 1, "komut": "rezervasyon", "durum": "TAMAM", "rezervasyon_id": "r1", "ucret": 18, "bakiye": 102}
+{"no": 2, "komut": "rezervasyon", "durum": "TAMAM", "rezervasyon_id": "r2", "ucret": 6, "bakiye": 114}
+{"no": 3, "komut": "saat", "durum": "TAMAM", "olaylar": [{"zaman": "2027-03-08T10:15", "tur": "GELMEDI", "rezervasyon": "r1", "kullanici": "u1", "guvenilirlik": 65}, {"zaman": "2027-03-15T00:00", "tur": "HAFTALIK_SIFIRLAMA"}]}
+{"no": 4, "komut": "iptal", "durum": "TAMAM", "iade": 0, "bakiye": 120, "guvenilirlik": 80, "olaylar": []}
+{"no": 5, "komut": "sorgu", "durum": "TAMAM", "bakiye": 120, "guvenilirlik": 65, "rezervasyonlar": [{"id": "r1", "kaynak": "YAZ-1", "baslangic": "2027-03-08T10:00", "bitis": "2027-03-08T11:00", "durum": "GELMEDI", "ucret": 18}]}
+{"no": 6, "komut": "sorgu", "durum": "TAMAM", "bakiye": 120, "guvenilirlik": 80, "rezervasyonlar": [{"id": "r2", "kaynak": "YAZ-1", "baslangic": "2027-03-15T08:00", "bitis": "2027-03-15T08:30", "durum": "IPTAL", "ucret": 6}]}

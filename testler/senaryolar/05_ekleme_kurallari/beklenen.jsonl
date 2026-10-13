@@ -1,0 +1,12 @@
+{"no": 1, "komut": "kullanici_ekle", "durum": "TAMAM"}
+{"no": 2, "komut": "kullanici_ekle", "durum": "RED", "kod": "ID_MEVCUT"}
+{"no": 3, "komut": "kullanici_ekle", "durum": "RED", "kod": "TANIMSIZ_DEGER"}
+{"no": 4, "komut": "kullanici_ekle", "durum": "RED", "kod": "GECERSIZ_DEGER"}
+{"no": 5, "komut": "kullanici_ekle", "durum": "RED", "kod": "GECERSIZ_DEGER"}
+{"no": 6, "komut": "kullanici_ekle", "durum": "TAMAM"}
+{"no": 7, "komut": "kaynak_ekle", "durum": "RED", "kod": "ID_MEVCUT"}
+{"no": 8, "komut": "kaynak_ekle", "durum": "RED", "kod": "TANIMSIZ_DEGER"}
+{"no": 9, "komut": "kaynak_ekle", "durum": "RED", "kod": "TANIMSIZ_DEGER"}
+{"no": 10, "komut": "kaynak_ekle", "durum": "TAMAM"}
+{"no": 11, "komut": "rezervasyon", "durum": "RED", "kod": "ROL_IZNI_YOK"}
+{"no": 12, "komut": "sorgu", "durum": "TAMAM", "bakiye": 50, "guvenilirlik": 80, "rezervasyonlar": []}

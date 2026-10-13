@@ -1,0 +1,15 @@
+{
+  "saat": "2027-03-08T08:00",
+  "kaynak_turleri": {
+    "ODA": { "hazirlik_dk": 0, "temel_ucret": 4, "enerji_yogun": false, "sertifika": null },
+    "YAZICI": { "hazirlik_dk": 20, "temel_ucret": 12, "enerji_yogun": true, "sertifika": null }
+  },
+  "roller": {
+    "OGRENCI": { "haftalik_kota": 120, "ileri_gun": 7, "azami_sure_dk": 180 }
+  },
+  "kaynaklar": [
+    { "id": "YAZ-1", "ad": "3B Yazıcı 1", "tur": "YAZICI", "izinli_roller": ["OGRENCI"] }
+  ],
+  "bakim_pencereleri": [],
+  "kullanicilar": []
+}

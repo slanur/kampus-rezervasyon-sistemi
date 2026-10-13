@@ -1,0 +1,3 @@
+# Yalnızca masaüstü uygulaması için gereklidir. Çekirdek modül (rezervasyon/)
+# yalnızca Python standart kütüphanesini kullanır, bağımlılığı yoktur.
+PySide6>=6.6

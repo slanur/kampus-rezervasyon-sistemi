@@ -1,0 +1,6 @@
+{"komut":"kaynak_ekle","id":"YAZ-2","ad":"3B Yazıcı 2","tur":"YAZICI","izinli_roller":["OGRENCI"]}
+{"komut":"rezervasyon","kullanici":"u1","kaynak":"YAZ-1","baslangic":"2027-03-08T10:00","bitis":"2027-03-08T11:00"}
+{"komut":"fiyat","kullanici":"u2","kaynak":"YAZ-2","baslangic":"2027-03-08T11:00","bitis":"2027-03-08T13:00"}
+{"komut":"rezervasyon","kullanici":"u2","kaynak":"ODA-1","baslangic":"2027-03-08T10:00","bitis":"2027-03-08T10:30"}
+{"komut":"fiyat","kullanici":"u1","kaynak":"ODA-1","baslangic":"2027-03-08T10:30","bitis":"2027-03-08T11:30"}
+{"komut":"rezervasyon","kullanici":"u3","kaynak":"CIH-1","baslangic":"2027-03-08T15:30","bitis":"2027-03-08T16:30"}

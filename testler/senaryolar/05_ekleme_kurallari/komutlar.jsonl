@@ -1,0 +1,12 @@
+{"komut":"kullanici_ekle","id":"u1","ad":"Ayşe Kaya","rol":"OGRENCI","sertifikalar":[],"bakiye":120,"guvenilirlik":80}
+{"komut":"kullanici_ekle","id":"u1","ad":"Başkası","rol":"OGRENCI","sertifikalar":[],"bakiye":50,"guvenilirlik":50}
+{"komut":"kullanici_ekle","id":"u9","ad":"Deneme","rol":"DOKTORA","sertifikalar":[],"bakiye":-10,"guvenilirlik":200}
+{"komut":"kullanici_ekle","id":"u9","ad":"Deneme","rol":"OGRENCI","sertifikalar":[],"bakiye":130,"guvenilirlik":80}
+{"komut":"kullanici_ekle","id":"u9","ad":"Deneme","rol":"OGRENCI","sertifikalar":[],"bakiye":50,"guvenilirlik":150}
+{"komut":"kullanici_ekle","id":"u9","ad":"Deneme","rol":"OGRENCI","sertifikalar":[],"bakiye":50,"guvenilirlik":80}
+{"komut":"kaynak_ekle","id":"YAZ-1","ad":"Başka Yazıcı","tur":"YAZICI","izinli_roller":["OGRENCI"]}
+{"komut":"kaynak_ekle","id":"K9","ad":"Roket","tur":"ROKET","izinli_roller":["OGRENCI"]}
+{"komut":"kaynak_ekle","id":"K9","ad":"Oda","tur":"ODA","izinli_roller":["OGRENCI","UZAYLI"]}
+{"komut":"kaynak_ekle","id":"K9","ad":"Kilitli Oda","tur":"ODA","izinli_roller":[]}
+{"komut":"rezervasyon","kullanici":"u9","kaynak":"K9","baslangic":"2027-03-08T10:00","bitis":"2027-03-08T10:30"}
+{"komut":"sorgu","tur":"kullanici","id":"u9"}

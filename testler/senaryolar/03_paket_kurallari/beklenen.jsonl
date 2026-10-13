@@ -1,0 +1,10 @@
+{"no": 1, "komut": "kullanici_ekle", "durum": "TAMAM"}
+{"no": 2, "komut": "kullanici_ekle", "durum": "TAMAM"}
+{"no": 3, "komut": "paket", "durum": "RED", "kod": "PAKET_BOYUTU", "kalemler": []}
+{"no": 4, "komut": "paket", "durum": "RED", "kod": "GUVENILIRLIK_DUSUK", "kalemler": []}
+{"no": 5, "komut": "paket", "durum": "RED", "kod": "PAKET_RED", "kalemler": [{"sira": 0, "durum": "TAMAM"}, {"sira": 1, "durum": "RED", "kod": "ZAMAN_ADIMI_HATASI"}]}
+{"no": 6, "komut": "paket", "durum": "RED", "kod": "PAKET_ICI_KESISME", "kalemler": [{"sira": 0, "durum": "TAMAM"}, {"sira": 1, "durum": "TAMAM"}]}
+{"no": 7, "komut": "paket", "durum": "RED", "kod": "BAKIYE_YETERSIZ", "kalemler": [{"sira": 0, "durum": "TAMAM"}, {"sira": 1, "durum": "TAMAM"}]}
+{"no": 8, "komut": "paket", "durum": "TAMAM", "paket_id": "p1", "rezervasyonlar": ["r1", "r2"], "ucretler": [24, 4], "toplam": 28, "bakiye": 272}
+{"no": 9, "komut": "iptal", "durum": "TAMAM", "iade": 12, "bakiye": 284, "guvenilirlik": 80, "olaylar": []}
+{"no": 10, "komut": "sorgu", "durum": "TAMAM", "bakiye": 284, "guvenilirlik": 80, "rezervasyonlar": [{"id": "r1", "kaynak": "CIH-1", "baslangic": "2027-03-08T14:00", "bitis": "2027-03-08T15:00", "durum": "IPTAL", "ucret": 24}, {"id": "r2", "kaynak": "ODA-1", "baslangic": "2027-03-08T14:00", "bitis": "2027-03-08T15:00", "durum": "ONAYLI", "ucret": 4}]}

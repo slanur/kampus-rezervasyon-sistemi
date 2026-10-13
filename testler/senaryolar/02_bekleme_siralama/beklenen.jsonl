@@ -1,0 +1,9 @@
+{"no": 1, "komut": "kullanici_ekle", "durum": "TAMAM"}
+{"no": 2, "komut": "kullanici_ekle", "durum": "TAMAM"}
+{"no": 3, "komut": "kullanici_ekle", "durum": "TAMAM"}
+{"no": 4, "komut": "rezervasyon", "durum": "TAMAM", "rezervasyon_id": "r1", "ucret": 4, "bakiye": 296}
+{"no": 5, "komut": "bekleme", "durum": "TAMAM", "bekleme_id": "b1", "sira": 1}
+{"no": 6, "komut": "bekleme", "durum": "TAMAM", "bekleme_id": "b2", "sira": 1}
+{"no": 7, "komut": "bekleme", "durum": "TAMAM", "bekleme_id": "b3", "sira": 3}
+{"no": 8, "komut": "iptal", "durum": "TAMAM", "iade": 0, "bakiye": 296, "guvenilirlik": 75, "olaylar": [{"zaman": "2027-03-08T08:00", "tur": "OTOMATIK_ATAMA", "bekleme": "b2", "rezervasyon": "r2", "kullanici": "uB", "ucret": 4, "bakiye": 116}]}
+{"no": 9, "komut": "sorgu", "durum": "TAMAM", "bakiye": 296, "guvenilirlik": 75, "rezervasyonlar": [{"id": "r1", "kaynak": "ODA-1", "baslangic": "2027-03-08T09:00", "bitis": "2027-03-08T10:00", "durum": "IPTAL", "ucret": 4}]}

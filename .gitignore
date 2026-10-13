@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+sonuclar.jsonl
+*.egg-info/
+.DS_Store
+Yaz_Lab_I-2.pdf

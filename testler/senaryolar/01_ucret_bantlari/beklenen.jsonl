@@ -1,0 +1,6 @@
+{"no": 1, "komut": "kaynak_ekle", "durum": "TAMAM"}
+{"no": 2, "komut": "rezervasyon", "durum": "TAMAM", "rezervasyon_id": "r1", "ucret": 18, "bakiye": 102}
+{"no": 3, "komut": "fiyat", "durum": "TAMAM", "ucret": 41}
+{"no": 4, "komut": "rezervasyon", "durum": "TAMAM", "rezervasyon_id": "r2", "ucret": 2, "bakiye": 118}
+{"no": 5, "komut": "fiyat", "durum": "TAMAM", "ucret": 5}
+{"no": 6, "komut": "rezervasyon", "durum": "TAMAM", "rezervasyon_id": "r3", "ucret": 20, "bakiye": 280}

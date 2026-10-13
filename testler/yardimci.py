@@ -1,0 +1,48 @@
+"""Birim testleri için ortak kurulum yardımcıları."""
+from __future__ import annotations
+
+from rezervasyon.motor import Motor
+from rezervasyon.yukleyici import yukle_sozlukten
+
+TEMEL_BASLANGIC = {
+    "saat": "2027-03-08T08:00",
+    "kaynak_turleri": {
+        "ODA": {"hazirlik_dk": 0, "temel_ucret": 4, "enerji_yogun": False, "sertifika": None},
+        "LAB": {"hazirlik_dk": 10, "temel_ucret": 8, "enerji_yogun": False, "sertifika": "LAB_GUVENLIK"},
+        "YAZICI": {"hazirlik_dk": 20, "temel_ucret": 12, "enerji_yogun": True, "sertifika": None},
+        "CIHAZ": {"hazirlik_dk": 15, "temel_ucret": 16, "enerji_yogun": True, "sertifika": "CIHAZ_EGITIMI"},
+    },
+    "roller": {
+        "OGRENCI": {"haftalik_kota": 120, "ileri_gun": 7, "azami_sure_dk": 180},
+        "ARASTIRMACI": {"haftalik_kota": 300, "ileri_gun": 14, "azami_sure_dk": 480},
+        "TEKNISYEN": {"haftalik_kota": 600, "ileri_gun": 30, "azami_sure_dk": 840},
+    },
+    "kaynaklar": [
+        {"id": "YAZ-1", "ad": "3B Yazıcı 1", "tur": "YAZICI", "izinli_roller": ["OGRENCI", "ARASTIRMACI"]},
+        {"id": "ODA-1", "ad": "Toplantı Odası 1", "tur": "ODA", "izinli_roller": ["OGRENCI", "ARASTIRMACI"]},
+        {"id": "LAB-1", "ad": "Laboratuvar 1", "tur": "LAB", "izinli_roller": ["OGRENCI", "ARASTIRMACI"]},
+        {"id": "CIH-1", "ad": "GPU Sunucu 1", "tur": "CIHAZ", "izinli_roller": ["ARASTIRMACI"]},
+    ],
+    "bakim_pencereleri": [],
+    "kullanicilar": [
+        {"id": "u1", "ad": "Test Kullanıcı 1", "rol": "OGRENCI", "sertifikalar": [], "bakiye": 120, "guvenilirlik": 80},
+        {"id": "u2", "ad": "Test Kullanıcı 2", "rol": "OGRENCI", "sertifikalar": [], "bakiye": 120, "guvenilirlik": 80},
+        {
+            "id": "u3",
+            "ad": "Test Kullanıcı 3",
+            "rol": "ARASTIRMACI",
+            "sertifikalar": ["CIHAZ_EGITIMI", "LAB_GUVENLIK"],
+            "bakiye": 300,
+            "guvenilirlik": 80,
+        },
+    ],
+}
+
+
+def motor(ek_degisiklik=None) -> Motor:
+    import copy
+
+    veri = copy.deepcopy(TEMEL_BASLANGIC)
+    if ek_degisiklik:
+        ek_degisiklik(veri)
+    return Motor(yukle_sozlukten(veri))

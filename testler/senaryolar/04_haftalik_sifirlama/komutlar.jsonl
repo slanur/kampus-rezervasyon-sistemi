@@ -1,0 +1,6 @@
+{"komut":"rezervasyon","kullanici":"u1","kaynak":"YAZ-1","baslangic":"2027-03-08T10:00","bitis":"2027-03-08T11:00"}
+{"komut":"rezervasyon","kullanici":"u2","kaynak":"YAZ-1","baslangic":"2027-03-15T08:00","bitis":"2027-03-15T08:30"}
+{"komut":"saat","zaman":"2027-03-15T00:00"}
+{"komut":"iptal","rezervasyon":"r2"}
+{"komut":"sorgu","tur":"kullanici","id":"u1"}
+{"komut":"sorgu","tur":"kullanici","id":"u2"}

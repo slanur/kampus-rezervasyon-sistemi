@@ -1,0 +1,10 @@
+{"komut":"kullanici_ekle","id":"uD","ad":"Düşük Güvenilirlik","rol":"ARASTIRMACI","sertifikalar":["CIHAZ_EGITIMI"],"bakiye":300,"guvenilirlik":40}
+{"komut":"kullanici_ekle","id":"uE","ad":"Düşük Bakiye","rol":"ARASTIRMACI","sertifikalar":["CIHAZ_EGITIMI"],"bakiye":5,"guvenilirlik":80}
+{"komut":"paket","kullanici":"u3","kalemler":[{"kaynak":"ODA-1","baslangic":"2027-03-08T09:00","bitis":"2027-03-08T10:00"}]}
+{"komut":"paket","kullanici":"uD","kalemler":[{"kaynak":"CIH-1","baslangic":"2027-03-08T10:00","bitis":"2027-03-08T11:00"},{"kaynak":"ODA-1","baslangic":"2027-03-08T10:00","bitis":"2027-03-08T11:00"}]}
+{"komut":"paket","kullanici":"u3","kalemler":[{"kaynak":"CIH-1","baslangic":"2027-03-08T10:00","bitis":"2027-03-08T11:00"},{"kaynak":"LAB-1","baslangic":"2027-03-08T10:05","bitis":"2027-03-08T11:00"}]}
+{"komut":"paket","kullanici":"u3","kalemler":[{"kaynak":"CIH-1","baslangic":"2027-03-08T10:00","bitis":"2027-03-08T11:00"},{"kaynak":"CIH-1","baslangic":"2027-03-08T10:30","bitis":"2027-03-08T11:30"}]}
+{"komut":"paket","kullanici":"uE","kalemler":[{"kaynak":"CIH-1","baslangic":"2027-03-08T10:00","bitis":"2027-03-08T11:00"},{"kaynak":"ODA-1","baslangic":"2027-03-08T10:00","bitis":"2027-03-08T11:00"}]}
+{"komut":"paket","kullanici":"u3","kalemler":[{"kaynak":"CIH-1","baslangic":"2027-03-08T14:00","bitis":"2027-03-08T15:00"},{"kaynak":"ODA-1","baslangic":"2027-03-08T14:00","bitis":"2027-03-08T15:00"}]}
+{"komut":"iptal","rezervasyon":"r1"}
+{"komut":"sorgu","tur":"kullanici","id":"u3"}
