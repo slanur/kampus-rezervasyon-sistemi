@@ -104,7 +104,7 @@
   K.onDurumDegisti(() => tumunuYenile());
 
   async function tumunuYenile() {
-    await Promise.all([ustBarYenile(), takvimYenile(), kullaniciPaneliYenile(), gunlukYenile(), rezDetayYenile()]);
+    await Promise.all([ustBarYenile(), takvimYenile(), kullaniciPaneliYenile(), gunlukYenile(), rezDetayYenile(), kullanicilariDoldur()]);
     fiyatlariGuncelleGecikmeli();
   }
 
