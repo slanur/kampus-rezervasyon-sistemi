@@ -96,6 +96,9 @@ window.Takvim = (function () {
     if (!doluluk || !doluluk.turler || !doluluk.turler.length) return;
     const ds = el("div", null, govde);
     ds.id = "doluluk-seridi";
+    const baslik = el("div", "ds-baslik", ds);
+    baslik.textContent = "Bant doluluğu";
+    baslik.title = "Gün 2 saatlik bantlara ayrılır (08–10, 10–12, …). Bir banttaki doluluk arttıkça o banttaki her rezervasyonun ücreti artar (K5).";
     doluluk.turler.forEach((t) => {
       const satir = el("div", "ds-satir", ds);
       const etiket = el("div", "ds-etiket", satir);
