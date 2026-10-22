@@ -70,3 +70,18 @@ def test_19_islem_oturum_uzerinden_beklenenle_eslesir(app):
             farklar.append(f"işlem {i}: {fark}")
     assert not farklar, "\n".join(farklar)
     pencere.close()
+
+
+def test_fiyat_onizlemesi_gunluge_yazilmaz(app):
+    pencere = AnaPencere()
+    oturum = pencere._oturum
+    oturum.dosya_yukle(os.path.join(ORNEK, "baslangic.json"))
+
+    onizleme = oturum.fiyat_onizleme("u3", "CIH-1", "2027-03-08T14:00", "2027-03-08T16:00")
+    assert onizleme == {"komut": "fiyat", "durum": "TAMAM", "ucret": 48}
+    assert oturum.gunluk == []
+
+    # Bilinçli `fiyat` komutu ise günlüğe yazılır.
+    oturum.fiyat("u3", "CIH-1", "2027-03-08T14:00", "2027-03-08T16:00")
+    assert [k["komut"]["komut"] for k in oturum.gunluk] == ["fiyat"]
+    pencere.close()

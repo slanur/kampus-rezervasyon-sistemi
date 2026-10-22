@@ -335,9 +335,13 @@ label.etiket { display: block; font-size: 10px; font-weight: 600; text-transform
 .gecmis-govde { position: absolute; top: 0; bottom: 0; left: 0; background: color-mix(in oklab, var(--foreground) 4%, transparent); pointer-events: none; }
 
 /* ---------------------------------------------------------------- Talep formu */
-.kalem-satir { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 8px;
+/* Kaynak seçimi kendi satırında tam genişlikte; saatler ve ücret alt satırda.
+   Böylece dar pencerede ne kaynak adı ne de saat alanları kesilir. */
+.kalem-satir { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 8px;
   border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--background); padding: 8px; margin-bottom: 8px; }
-.kalem-ucret { width: 76px; text-align: right; font-family: var(--font-mono); font-size: 11px; color: var(--primary);
+.kalem-satir select { grid-column: 1 / -1; min-width: 0; width: 100%; text-overflow: ellipsis; }
+.saat-girdi { width: 92px; min-width: 92px; }
+.kalem-ucret { justify-self: end; min-width: 76px; text-align: right; font-family: var(--font-mono); font-size: 11px; color: var(--primary);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
 .kalem-uyari {
   display: flex; align-items: flex-start; gap: 8px; margin: -2px 0 10px; padding: 9px 11px;
@@ -347,6 +351,10 @@ label.etiket { display: block; font-size: 10px; font-weight: 600; text-transform
   animation: belirme 0.2s var(--ease);
 }
 .kalem-uyari-ikon { color: var(--destructive); font-weight: 700; flex-shrink: 0; line-height: 1.45; }
+.kalem-uyari.basarili { border-color: color-mix(in oklab, var(--success) 35%, transparent); background: color-mix(in oklab, var(--success) 9%, transparent); }
+.kalem-uyari.basarili .kalem-uyari-ikon { color: var(--success); }
+#rez-detay-sonuc:not(:empty) { margin-top: 12px; }
+#rez-detay-sonuc .sonuc-banner { padding: 12px; }
 .kod-cip {
   display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px; vertical-align: 1px;
   font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.3px; white-space: nowrap;

@@ -26,6 +26,7 @@ _IZINLI_YONTEMLER = {
     "rezervasyon",
     "paket",
     "fiyat",
+    "fiyat_onizleme",
     "iptal",
     "giris",
     "cikis",

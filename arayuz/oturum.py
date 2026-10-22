@@ -64,6 +64,11 @@ class Oturum(QObject):
         komut = {"komut": "fiyat", "kullanici": kullanici, "kaynak": kaynak, "baslangic": baslangic, "bitis": bitis}
         return self._kaydet(komut, self.motor.fiyat(kullanici, kaynak, baslangic, bitis), False)
 
+    def fiyat_onizleme(self, kullanici: str, kaynak: str, baslangic: str, bitis: str) -> dict:
+        """Formun canlı ücret önizlemesi: `fiyat` ile aynı fonksiyon, ama günlüğe
+        YAZILMAZ — kullanıcı bir komut vermedi, yalnızca form alanı değişti."""
+        return self.motor.fiyat(kullanici, kaynak, baslangic, bitis)
+
     def iptal(self, rezervasyon: str) -> dict:
         komut = {"komut": "iptal", "rezervasyon": rezervasyon}
         return self._kaydet(komut, self.motor.iptal(rezervasyon), True)
