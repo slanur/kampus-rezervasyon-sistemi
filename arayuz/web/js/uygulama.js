@@ -497,7 +497,7 @@
       K.cagir("doluluk_seridi", { gun: S.seciliGun }),
     ]);
     const simdi = await gorunenSimdi();
-    Takvim.goster(gunVeri, S.seciliGun, simdi, S.filtreAktif ? S.seciliKullanici : null, doluluk);
+    Takvim.goster(gunVeri, S.seciliGun, simdi, S.filtreAktif ? S.seciliKullanici : null, $("doluluk-kutusu").checked ? doluluk : null);
   }
 
   function gunDegistir(delta) {
@@ -517,6 +517,12 @@
     gunEtiketiGuncelle();
     takvimYenile();
     varsayilanKalemler();
+  });
+  // Doluluk şeridi açık/kapalı — kişisel tercih, tarayıcıda hatırlanır.
+  try { $("doluluk-kutusu").checked = localStorage.getItem("dolulukSeridi") !== "kapali"; } catch (e) {}
+  $("doluluk-kutusu").addEventListener("change", (ev) => {
+    try { localStorage.setItem("dolulukSeridi", ev.target.checked ? "acik" : "kapali"); } catch (e) {}
+    takvimYenile();
   });
   $("filtre-kutusu").addEventListener("change", (ev) => {
     S.filtreAktif = ev.target.checked;

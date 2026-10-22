@@ -454,18 +454,22 @@ label.etiket { display: block; font-size: 10px; font-weight: 600; text-transform
 .dokum-toplam { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border); font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-align: right; }
 .dokum-not { margin: 4px 0 0; font-size: 11px; color: var(--muted-foreground); }
 
-/* ---------------------------------------------------------------- Doluluk ısı şeridi */
-#doluluk-seridi { padding: 2px 0 6px; }
-.ds-satir { display: flex; align-items: center; height: 18px; }
-.ds-etiket { width: 176px; flex-shrink: 0; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.4px; color: var(--muted-foreground); }
-.ds-alt { opacity: 0.7; }
-.ds-bantlar { flex: 1; display: flex; gap: 2px; height: 14px; }
-.ds-hucre { flex: 1; border-radius: 3px; font-family: var(--font-mono); font-size: 9px; line-height: 14px; text-align: center; color: var(--foreground); overflow: hidden; white-space: nowrap; cursor: help; }
-.ds-hucre.seviye-0 { background: color-mix(in oklab, var(--muted-foreground) 8%, transparent); }
-.ds-hucre.seviye-1 { background: color-mix(in oklab, var(--st-kullanimda) 25%, transparent); }
-.ds-hucre.seviye-2 { background: color-mix(in oklab, var(--st-kullanimda) 45%, transparent); }
-.ds-hucre.seviye-3 { background: color-mix(in oklab, var(--st-gelmedi) 45%, transparent); }
-.ds-hucre.seviye-4 { background: color-mix(in oklab, var(--st-gelmedi) 70%, transparent); }
-.ds-hucre.pik { box-shadow: inset 0 2px 0 color-mix(in oklab, var(--primary) 70%, transparent); }
-.efsane-desen.ds-ornek { background: linear-gradient(90deg, color-mix(in oklab, var(--st-kullanimda) 25%, transparent), color-mix(in oklab, var(--st-gelmedi) 70%, transparent)); }
+/* ---------------------------------------------------------------- Doluluk ısı şeridi
+   Ayrı ve ikincil bir bölüm: kaynak satırlarından kesik çizgiyle ayrılır,
+   renkler rezervasyon kutularıyla yarışmayacak kadar soluktur. */
+#doluluk-seridi { margin: 2px 0 8px; padding: 4px 0 8px; border-bottom: 1px dashed var(--border);
+  background: color-mix(in oklab, var(--muted-foreground) 4%, transparent); border-radius: var(--radius-sm); }
+.ds-baslik { width: 176px; padding: 0 12px 3px 6px; font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted-foreground); cursor: help; }
+.ds-satir { display: flex; align-items: center; height: 15px; }
+.ds-etiket { width: 176px; flex-shrink: 0; padding-left: 6px; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.4px; color: var(--muted-foreground); }
+.ds-alt { opacity: 0.6; }
+.ds-bantlar { flex: 1; display: flex; gap: 3px; height: 11px; }
+.ds-hucre { flex: 1; border-radius: 2px; font-family: var(--font-mono); font-size: 8.5px; line-height: 11px; text-align: center; color: var(--muted-foreground); overflow: hidden; white-space: nowrap; cursor: help; }
+.ds-hucre.seviye-0 { background: color-mix(in oklab, var(--muted-foreground) 6%, transparent); }
+.ds-hucre.seviye-1 { background: color-mix(in oklab, var(--st-kullanimda) 16%, transparent); color: var(--foreground); }
+.ds-hucre.seviye-2 { background: color-mix(in oklab, var(--st-kullanimda) 28%, transparent); color: var(--foreground); }
+.ds-hucre.seviye-3 { background: color-mix(in oklab, var(--st-gelmedi) 26%, transparent); color: var(--foreground); }
+.ds-hucre.seviye-4 { background: color-mix(in oklab, var(--st-gelmedi) 40%, transparent); color: var(--foreground); }
+.ds-hucre.pik { box-shadow: inset 0 1.5px 0 color-mix(in oklab, var(--primary) 55%, transparent); }
+.efsane-desen.ds-ornek { background: linear-gradient(90deg, color-mix(in oklab, var(--st-kullanimda) 16%, transparent), color-mix(in oklab, var(--st-gelmedi) 40%, transparent)); }
 .efsane-desen.ds-pik-ornek { background: color-mix(in oklab, var(--muted-foreground) 8%, transparent); box-shadow: inset 0 2px 0 color-mix(in oklab, var(--primary) 70%, transparent); }
