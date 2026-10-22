@@ -13,6 +13,7 @@
     mod: "tek", // "tek" | "paket"
     kalemler: [], // [{kaynak, bas:"HH:MM", bit:"HH:MM"}]
     kalemFiyatlari: [], // paralel dizi: {ucret?, kod?}
+    sonOnay: null, // {rezler:[...]} — form onaylanan talebi gösteriyor; kullanıcı formu değiştirince sıfırlanır
     seciliRezId: null,
     sonRedParametreler: null,
     oncekiDegerler: {}, // kid -> {bakiye, guvenilirlik}
@@ -226,7 +227,7 @@
       if (sonuc.durum !== "TAMAM") { oynatSifirla(); return; }
       Oynat.gorsel = ms;
       if (sonuc.olaylar && sonuc.olaylar.length) {
-        gosterSonuc({ ok: true, title: `${iso.slice(11)} · ${sonuc.olaylar.length} olay`, lines: olaySatirlari(sonuc.olaylar) });
+        gosterSonuc({ ok: true, title: `${iso.slice(11)} · ${sonuc.olaylar.length} olay`, lines: await olaySatirlari(sonuc.olaylar) });
       }
       const yeniGun = iso.slice(0, 10);
       if (takipEdiliyor && yeniGun !== S.seciliGun) {
@@ -270,32 +271,69 @@
       const olaylar = sonuc.olaylar || [];
       gosterSonuc({
         ok: true, title: `Saat → ${hedefIso.slice(11)}`,
-        lines: olaylar.length ? olaySatirlari(olaylar) : ["Olay oluşmadı."],
+        lines: olaylar.length ? await olaySatirlari(olaylar) : ["Olay oluşmadı."],
       });
     } else {
       gosterSonuc({ ok: false, title: "SAAT_GERI", lines: [await K.cagir("hata_aciklamasi", { kod: sonuc.kod })] });
     }
   }
-  function olaySatirlari(olaylar) {
-    return olaylar.map((o) => o.tur === "OTOMATIK_ATAMA"
-      ? `OTOMATIK_ATAMA → ${o.rezervasyon} (${o.kullanici}, ${o.ucret} KP)`
-      : `${o.tur} · ${o.rezervasyon || ""} · ${o.kullanici || ""} ${o.guvenilirlik !== undefined ? "güv. " + o.guvenilirlik : ""}`.trim());
+  // Olay satırı: ne zaman, ne oldu, kime, sonucu ne (güvenilirlik / ücret / bakiye).
+  async function olaySatirlari(olaylar) {
+    const adlar = {};
+    (await K.cagir("kullanicilar")).forEach((u) => { adlar[u.id] = u.ad; });
+    const kim = (id) => (adlar[id] ? `${adlar[id]} (${id})` : id);
+    return olaylar.map((o) => {
+      const [gun, saat] = o.zaman.split("T");
+      const zaman = gun === S.seciliGun ? saat : `${gun.slice(8, 10)}.${gun.slice(5, 7)} ${saat}`;
+      if (o.tur === "OTOMATIK_ATAMA") return `${zaman} · OTOMATIK_ATAMA · ${o.bekleme} → ${o.rezervasyon} · ${kim(o.kullanici)} · ${o.ucret} KP · bakiye ${o.bakiye}`;
+      if (o.tur === "HAFTALIK_SIFIRLAMA") return `${zaman} · HAFTALIK_SIFIRLAMA · bakiyeler haftalık kotaya eşitlendi`;
+      return `${zaman} · ${o.tur} · ${o.rezervasyon} · ${kim(o.kullanici)} · güvenilirlik ${o.guvenilirlik}`;
+    });
   }
 
   $("artir-15-btn").addEventListener("click", async () => saatiIlerlet(await kaydirilmisSaat(15)));
   $("artir-60-btn").addEventListener("click", async () => saatiIlerlet(await kaydirilmisSaat(60)));
-  $("artir-gun-btn").addEventListener("click", async () => saatiIlerlet(await kaydirilmisSaat(240)));
+  $("artir-240-btn").addEventListener("click", async () => saatiIlerlet(await kaydirilmisSaat(240)));
   $("sonraki-olay-btn").addEventListener("click", async () => {
     await oynatDurdur();
     const hedef = await K.cagir("sonraki_olay_zamani");
     if (hedef) saatiIlerlet(hedef);
   });
-  $("saate-git-btn").addEventListener("click", async () => {
+  // "Saate git" penceresi. Alanlar serbesttir (arayüz engellemez): geçmiş bir
+  // saat de gönderilebilir, reddi (SAAT_GERI) çekirdek verir.
+  $("saate-git-btn").addEventListener("click", () => saatModalAc());
+
+  async function saatModalAc() {
     await oynatDurdur();
     const mevcut = await K.cagir("simdi");
-    const girdi = prompt("Saate git (YYYY-AA-GGTSS:DD)", mevcut);
-    if (girdi && girdi.trim()) saatiIlerlet(girdi.trim());
-  });
+    $("sm-simdi").textContent = mevcut.replace("T", " ");
+    saatModalDoldur(mevcut);
+    $("saat-modal").classList.remove("gizli");
+    $("sm-saat").focus();
+    $("sm-saat").select();
+  }
+  function saatModalDoldur(iso) {
+    $("sm-tarih").value = iso.slice(0, 10);
+    $("sm-saat").value = iso.slice(11, 16);
+  }
+  function saatModalGonder() {
+    const tarih = $("sm-tarih").value;
+    const saat = $("sm-saat").value.trim();
+    if (!tarih && !saat) return;
+    $("saat-modal").classList.add("gizli");
+    saatiIlerlet(`${tarih}T${saat}`);
+  }
+  $("sm-git-btn").addEventListener("click", saatModalGonder);
+  [$("sm-tarih"), $("sm-saat")].forEach((g) => g.addEventListener("keydown", (ev) => {
+    if (ev.key === "Enter") { ev.preventDefault(); saatModalGonder(); }
+  }));
+  document.querySelectorAll("#sm-hizli button").forEach((b) => b.addEventListener("click", async () => {
+    const d = new Date((await K.cagir("simdi")).replace("T", " ") + ":00");
+    if (b.dataset.dk) d.setMinutes(d.getMinutes() + Number(b.dataset.dk));
+    else { d.setDate(d.getDate() + Number(b.dataset.ertesi)); d.setHours(8, 0, 0, 0); }
+    saatModalDoldur(isoYerel(d));
+    $("sm-saat").focus();
+  }));
   $("geri-al-btn").addEventListener("click", () => K.cagir("geri_al"));
 
   async function kaydirilmisSaat(dakika) {
@@ -319,9 +357,22 @@
     saril.innerHTML = "";
   }
 
-  function gosterSonuc({ ok, title, lines = [], kalemler = null, waitable = null, kod = null, mesaj = null, oneriler = null }) {
+  function gosterSonuc(secenekler) {
     const saril = $("sonuc-banner-saril");
     saril.style.display = "block";
+    saril.innerHTML = "";
+    saril.appendChild(sonucKartiOlustur(secenekler, sonucKapat));
+  }
+
+  // Giriş/çıkış/iptal sonucu, düğmelerin hemen altında (rezervasyon kartının içinde) görünür.
+  function kartSonucGoster(secenekler) {
+    const hedef = $("rez-detay-sonuc");
+    hedef.innerHTML = "";
+    hedef.appendChild(sonucKartiOlustur(secenekler, kartSonucTemizle));
+  }
+  function kartSonucTemizle() { $("rez-detay-sonuc").innerHTML = ""; }
+
+  function sonucKartiOlustur({ ok, title, lines = [], kalemler = null, waitable = null, kod = null, mesaj = null, oneriler = null }, kapat) {
     const banner = document.createElement("div");
     banner.className = "sonuc-banner " + (ok ? "ok" : "hata");
     const icerik = document.createElement("div");
@@ -371,19 +422,18 @@
     if (oneriler) {
       const kutu = document.createElement("div");
       kutu.className = "oneri-kutu";
-      if (oneriKutusunuCiz(kutu, oneriler, sonucKapat)) icerik.appendChild(kutu);
+      if (oneriKutusunuCiz(kutu, oneriler, kapat)) icerik.appendChild(kutu);
     }
 
     const kapatBtn = document.createElement("button");
     kapatBtn.className = "btn btn-ghost btn-ikon";
     kapatBtn.textContent = "✕";
     kapatBtn.style.cssText = "width:28px;height:28px;flex-shrink:0;";
-    kapatBtn.addEventListener("click", sonucKapat);
+    kapatBtn.addEventListener("click", kapat);
 
     banner.appendChild(icerik);
     banner.appendChild(kapatBtn);
-    saril.innerHTML = "";
-    saril.appendChild(banner);
+    return banner;
   }
 
   // ------------------------------------------------------------------
@@ -429,12 +479,12 @@
   $("kaynak-ekle-btn").addEventListener("click", () => kaynakModalAc());
 
   Takvim.kur($("takvim-kaydir"), $("takvim-govde"), {
-    onRezervasyonTiklandi: (id) => { S.seciliRezId = id; rezDetayYenile(); },
+    onRezervasyonTiklandi: (id) => { rezervasyonSec(id); },
     onBosAlanSecildi: (kaynakId, b, e) => {
       modSec("tek");
       S.kalemler = [{ kaynak: kaynakId, bas: b.slice(11), bit: e.slice(11) }];
       kalemleriCiz();
-      fiyatlariGuncelleGecikmeli();
+      formDegisti();
       $("gonder-btn").scrollIntoView({ behavior: "smooth", block: "center" });
     },
   });
@@ -442,7 +492,12 @@
   // ------------------------------------------------------------------
   // Seçili rezervasyon kartı
   // ------------------------------------------------------------------
-  $("rez-detay-kapat").addEventListener("click", () => { S.seciliRezId = null; rezDetayYenile(); takvimYenile(); });
+  function rezervasyonSec(id) {
+    if (id !== S.seciliRezId) kartSonucTemizle();
+    S.seciliRezId = id;
+    rezDetayYenile();
+  }
+  $("rez-detay-kapat").addEventListener("click", () => { rezervasyonSec(null); takvimYenile(); });
 
   async function rezDetayYenile() {
     const kart = $("rez-detay-kart");
@@ -475,18 +530,22 @@
     } else onizlemeEl.style.display = "none";
   }
 
+  const EYLEM_ADI = { giris: "Giriş", cikis: "Çıkış", iptal: "İptal" };
+
   async function rezEylem(yontem) {
     if (!S.seciliRezId) return;
-    const sonuc = await K.cagir(yontem, { rezervasyon: S.seciliRezId });
+    const id = S.seciliRezId;
+    const sonuc = await K.cagir(yontem, { rezervasyon: id });
     if (sonuc.durum === "RED") {
-      gosterSonuc({ ok: false, title: `${yontem.toUpperCase()} reddedildi`, lines: [await K.cagir("hata_aciklamasi", { kod: sonuc.kod })] });
+      kartSonucGoster({ ok: false, title: `${EYLEM_ADI[yontem]} reddedildi`, kod: sonuc.kod, mesaj: await K.cagir("hata_aciklamasi", { kod: sonuc.kod }) });
       return;
     }
     const lines = [];
+    if (sonuc.yeni_durum) lines.push(`Yeni durum: ${sonuc.yeni_durum}`);
     if ("iade" in sonuc) lines.push(`İade: ${sonuc.iade} KP`, `Bakiye: ${sonuc.bakiye} KP`);
     if ("guvenilirlik" in sonuc) lines.push(`Güvenilirlik: ${sonuc.guvenilirlik}`);
-    if (sonuc.olaylar) lines.push(...olaySatirlari(sonuc.olaylar));
-    gosterSonuc({ ok: true, title: `${S.seciliRezId} · ${yontem} tamam`, lines });
+    if (sonuc.olaylar) lines.push(...(await olaySatirlari(sonuc.olaylar)));
+    kartSonucGoster({ ok: true, title: `${id} · ${EYLEM_ADI[yontem]} tamam`, lines });
   }
   $("rd-giris-btn").addEventListener("click", () => rezEylem("giris"));
   $("rd-cikis-btn").addEventListener("click", () => rezEylem("cikis"));
@@ -513,7 +572,7 @@
     S.seciliKullanici = ev.target.value || null;
     kullaniciPaneliYenile();
     takvimYenile();
-    fiyatlariGuncelleGecikmeli();
+    formDegisti();
   });
   $("kullanici-ekle-btn").addEventListener("click", () => kullaniciModalAc());
 
@@ -546,7 +605,7 @@
         `<span style="color:var(--muted-foreground);">${r.kaynak}</span>` +
         `<span style="color:var(--muted-foreground);">${r.baslangic.slice(11)}–${r.bitis.slice(11)}</span>` +
         `<span style="margin-left:auto;">${r.ucret}</span>`;
-      btn.addEventListener("click", () => { S.seciliRezId = r.id; rezDetayYenile(); });
+      btn.addEventListener("click", () => rezervasyonSec(r.id));
       rezListe.appendChild(btn);
     });
 
@@ -571,7 +630,7 @@
     const { bas, bit } = await varsayilanSaatAraligi();
     S.kalemler = [{ kaynak: ilkKaynak, bas, bit }];
     kalemleriCiz();
-    fiyatlariGuncelleGecikmeli();
+    formDegisti();
   }
 
   async function varsayilanSaatAraligi() {
@@ -592,6 +651,7 @@
     S.mod = mod;
     document.querySelectorAll(".segment-opsiyon").forEach((o) => o.classList.toggle("secili", o.dataset.mod === mod));
     $("paket-dugmeler").style.display = mod === "paket" ? "flex" : "none";
+    $("fiyat-sor-btn").style.display = mod === "paket" ? "none" : "";
     if (mod === "tek") {
       S.kalemler = S.kalemler.slice(0, 1);
     } else if (S.kalemler.length < 2) {
@@ -599,12 +659,12 @@
         const kid = kaynaklar[1] ? kaynaklar[1].id : kaynaklar[0]?.id;
         S.kalemler.push({ kaynak: kid, bas: S.kalemler[0]?.bas || "11:00", bit: S.kalemler[0]?.bit || "12:00" });
         kalemleriCiz();
-        fiyatlariGuncelleGecikmeli();
+        formDegisti();
       });
       return;
     }
     kalemleriCiz();
-    fiyatlariGuncelleGecikmeli();
+    formDegisti();
   }
   document.querySelectorAll(".segment-opsiyon").forEach((o) => o.addEventListener("click", () => modSec(o.dataset.mod)));
 
@@ -624,17 +684,17 @@
         if (k.id === kalem.kaynak) o.selected = true;
         kaynakSel.appendChild(o);
       });
-      kaynakSel.addEventListener("change", (ev) => { S.kalemler[i].kaynak = ev.target.value; fiyatlariGuncelleGecikmeli(); });
+      kaynakSel.addEventListener("change", (ev) => { S.kalemler[i].kaynak = ev.target.value; formDegisti(); });
 
       const basInp = document.createElement("input");
-      basInp.className = "girdi-sm mono"; basInp.style.width = "84px"; basInp.setAttribute("list", "saat-secenekleri");
+      basInp.className = "girdi-sm mono saat-girdi"; basInp.setAttribute("list", "saat-secenekleri");
       basInp.value = kalem.bas;
-      basInp.addEventListener("input", (ev) => { S.kalemler[i].bas = ev.target.value; fiyatlariGuncelleGecikmeli(); });
+      basInp.addEventListener("input", (ev) => { S.kalemler[i].bas = ev.target.value; formDegisti(); });
 
       const bitInp = document.createElement("input");
-      bitInp.className = "girdi-sm mono"; bitInp.style.width = "84px"; bitInp.setAttribute("list", "saat-secenekleri");
+      bitInp.className = "girdi-sm mono saat-girdi"; bitInp.setAttribute("list", "saat-secenekleri");
       bitInp.value = kalem.bit;
-      bitInp.addEventListener("input", (ev) => { S.kalemler[i].bit = ev.target.value; fiyatlariGuncelleGecikmeli(); });
+      bitInp.addEventListener("input", (ev) => { S.kalemler[i].bit = ev.target.value; formDegisti(); });
 
       const ucretSpan = document.createElement("span");
       ucretSpan.className = "kalem-ucret";
@@ -659,17 +719,18 @@
     return cip;
   }
 
-  function kalemUyarisiGoster(i, mesaj, kod) {
+  function kalemUyarisiGoster(i, mesaj, kod, basarili = false) {
     const el = $(`kalem-uyari-${i}`);
     if (!el) return;
     if (!mesaj) { el.style.display = "none"; el.innerHTML = ""; return; }
     el.innerHTML = "";
+    el.classList.toggle("basarili", basarili);
     const ikon = document.createElement("span");
     ikon.className = "kalem-uyari-ikon";
-    ikon.textContent = "!";
+    ikon.textContent = basarili ? "✓" : "!";
     const metin = document.createElement("span");
     metin.textContent = mesaj;
-    metin.appendChild(kodCipi(kod));
+    if (kod) metin.appendChild(kodCipi(kod));
     el.append(ikon, metin);
     el.style.display = "flex";
   }
@@ -733,7 +794,7 @@
     if (S.mod !== "tek") modSec("tek");
     S.kalemler = [{ kaynak: o.kaynak, bas: o.baslangic.slice(11), bit: o.bitis.slice(11) }];
     kalemleriCiz();
-    fiyatlariGuncelleGecikmeli();
+    formDegisti();
   }
 
   function talepArgumanlari(kalem) {
@@ -743,6 +804,12 @@
       baslangic: `${S.seciliGun}T${kalem.bas}`,
       bitis: `${S.seciliGun}T${kalem.bit}`,
     };
+  }
+
+  // Kullanıcı formu değiştirdi: "onaylandı" görünümünden çık, ücreti yeniden hesapla.
+  function formDegisti() {
+    S.sonOnay = null;
+    fiyatlariGuncelleGecikmeli();
   }
 
   let fiyatZamanlayici = null;
@@ -757,6 +824,7 @@
     // Yeni bir tur başladıysa eski turun (geç gelen) sonuçları çizilmez.
     const tur = ++fiyatTuru;
     const guncel = () => tur === fiyatTuru;
+    if (S.sonOnay) { onayliFormuGoster(); return; }
     let toplam = 0;
     let oneriTalebi = null;
     for (let i = 0; i < S.kalemler.length; i++) {
@@ -769,7 +837,7 @@
       }
       try {
         const args = talepArgumanlari(kalem);
-        const sonuc = await K.cagir("fiyat", args);
+        const sonuc = await K.cagir("fiyat_onizleme", args);
         if (!guncel()) return;
         if (sonuc.durum === "TAMAM") {
           if (span) { span.textContent = `${sonuc.ucret} KP`; span.style.color = "var(--primary)"; span.title = ""; }
@@ -807,19 +875,52 @@
     }
   }
 
+  // Talep az önce onaylandıysa aynı aralığı tekrar fiyatlamak "KESISME" (kendi
+  // rezervasyonuyla çakışma) gösterir ve kullanıcıyı yanıltır; onun yerine onay notu gösterilir.
+  async function onayliFormuGoster() {
+    S.kalemler.forEach((_, i) => {
+      const span = $(`kalem-ucret-${i}`);
+      if (span) { span.textContent = `✓ ${S.sonOnay.rezler[i] || ""}`; span.style.color = "var(--success)"; span.title = ""; }
+      kalemUyarisiGoster(i, null);
+    });
+    kalemUyarisiGoster(0, `Onaylandı: ${S.sonOnay.rezler.join(", ")}. Yeni bir talep için alanları değiştir ya da takvimde boş bir alanı sürükle.`, null, true);
+    $("ucret-toplam").textContent = "— KP";
+    $("oneri-kutu").style.display = "none";
+    const kullanici = (await K.cagir("kullanicilar")).find((u) => u.id === S.seciliKullanici);
+    if (kullanici) {
+      $("ozet-bakiye").textContent = `${kullanici.bakiye} KP`;
+      $("ozet-sonrasi").textContent = `${kullanici.bakiye} KP`;
+      $("ozet-sonrasi").classList.remove("negatif");
+    }
+  }
+
   $("kalem-ekle-btn").addEventListener("click", async () => {
     if (S.kalemler.length >= 4) return;
     const kaynaklar = await K.cagir("kaynaklar");
     const kid = kaynaklar[S.kalemler.length % kaynaklar.length]?.id;
     S.kalemler.push({ kaynak: kid, bas: "11:00", bit: "12:00" });
     kalemleriCiz();
-    fiyatlariGuncelleGecikmeli();
+    formDegisti();
   });
   $("kalem-sil-btn").addEventListener("click", () => {
     if (S.kalemler.length <= 2) return;
     S.kalemler.pop();
     kalemleriCiz();
-    fiyatlariGuncelleGecikmeli();
+    formDegisti();
+  });
+
+  // Önizleme günlüğe yazılmaz; `fiyat` komutunu bilinçli olarak göndermek
+  // (ve günlükte görmek) için bu düğme kullanılır.
+  $("fiyat-sor-btn").addEventListener("click", async () => {
+    if (!S.seciliKullanici || !(await K.yukluMu()) || !S.kalemler.length) return;
+    const args = talepArgumanlari(S.kalemler[0]);
+    const sonuc = await K.cagir("fiyat", args);
+    gunlukYenile();
+    if (sonuc.durum === "TAMAM") {
+      gosterSonuc({ ok: true, title: `Fiyat · ${args.kaynak} ${args.baslangic.slice(11)}–${args.bitis.slice(11)}`, lines: [`Ücret: ${sonuc.ucret} KP`] });
+    } else {
+      gosterSonuc({ ok: false, title: "Fiyat hesaplanamadı", kod: sonuc.kod, mesaj: await K.cagir("red_aciklamasi", { ...args, kod: sonuc.kod }) });
+    }
   });
 
   $("gonder-btn").addEventListener("click", async () => {
@@ -838,7 +939,9 @@
         ]);
         gosterSonuc({ ok: false, title: "Rezervasyon reddedildi", kod: sonuc.kod, mesaj, waitable, oneriler });
       } else {
-        gosterSonuc({ ok: true, title: `Onaylandı · ${sonuc.rezervasyon_id}`, lines: [`Ücret: ${sonuc.ucret} KP`, `Yeni bakiye: ${sonuc.bakiye} KP`] });
+        S.sonOnay = { rezler: [sonuc.rezervasyon_id] };
+        fiyatlariGuncelleGecikmeli();
+        gosterSonuc({ ok: true, title: `Onaylandı · ${sonuc.rezervasyon_id}`, lines: [`${p.kaynak} · ${p.baslangic.slice(11)}–${p.bitis.slice(11)}`, `Ücret: ${sonuc.ucret} KP`, `Yeni bakiye: ${sonuc.bakiye} KP`] });
       }
     } else {
       const sonuc = await K.cagir("paket", { kullanici: S.seciliKullanici, kalemler: parsed });
@@ -855,8 +958,11 @@
           gosterSonuc({ ok: false, title: "Paket reddedildi", kod: sonuc.kod, mesaj: await K.cagir("hata_aciklamasi", { kod: sonuc.kod }) });
         }
       } else {
-        gosterSonuc({ ok: true, title: `Paket onaylandı · ${sonuc.paket_id}`, lines: [`Rezervasyonlar: ${sonuc.rezervasyonlar.join(", ")}`, `Toplam: ${sonuc.toplam} KP`, `Yeni bakiye: ${sonuc.bakiye} KP`] });
-        document.querySelectorAll("#kalemler-govde .kalem-ucret").forEach((s) => (s.style.color = "var(--success)"));
+        S.sonOnay = { rezler: sonuc.rezervasyonlar };
+        fiyatlariGuncelleGecikmeli();
+        const kalemSatirlari = sonuc.rezervasyonlar.map((rid, i) =>
+          `${rid} · ${parsed[i].kaynak} · ${parsed[i].baslangic.slice(11)}–${parsed[i].bitis.slice(11)} · ${sonuc.ucretler[i]} KP`);
+        gosterSonuc({ ok: true, title: `Paket onaylandı · ${sonuc.paket_id}`, lines: [...kalemSatirlari, `Toplam: ${sonuc.toplam} KP`, `Yeni bakiye: ${sonuc.bakiye} KP`] });
       }
     }
   });
@@ -973,11 +1079,16 @@
   // ------------------------------------------------------------------
   document.addEventListener("keydown", (ev) => {
     const yaziAlaninda = ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName);
-    if (ev.ctrlKey && ev.key === "Enter") { ev.preventDefault(); $("gonder-btn").click(); return; }
-    if (ev.ctrlKey && (ev.key === "z" || ev.key === "Z")) { ev.preventDefault(); $("geri-al-btn").click(); return; }
-    if (ev.ctrlKey && (ev.key === "f" || ev.key === "F")) { ev.preventDefault(); $("gunluk-arama").focus(); return; }
+    const metinAlaninda = ["INPUT", "TEXTAREA"].includes(document.activeElement.tagName);
+    const mod = ev.ctrlKey || ev.metaKey; // Windows/Linux: Ctrl, macOS: Cmd
+    const tus = ev.key.toLowerCase();
+    const modalAcik = !!document.querySelector(".modal-zemin:not(.gizli)");
+    if (mod && ev.key === "Enter" && !modalAcik) { ev.preventDefault(); $("gonder-btn").click(); return; }
+    // Metin kutusundayken Ctrl/Cmd+Z, yazılan metni geri alsın (tarayıcının kendi davranışı).
+    if (mod && tus === "z" && !ev.shiftKey && !metinAlaninda && !modalAcik) { ev.preventDefault(); $("geri-al-btn").click(); return; }
+    if (mod && tus === "f") { ev.preventDefault(); $("gunluk-arama").focus(); return; }
     if (ev.key === "Escape") { document.querySelectorAll(".modal-zemin").forEach((m) => m.classList.add("gizli")); return; }
-    if (yaziAlaninda) return;
+    if (yaziAlaninda || modalAcik || mod || ev.altKey) return;
     if (ev.key === " ") { ev.preventDefault(); oynatDegistir(); return; }
     if (ev.key === "ArrowLeft") gunDegistir(-1);
     else if (ev.key === "ArrowRight") gunDegistir(1);
@@ -986,5 +1097,14 @@
   });
 
   // ------------------------------------------------------------------
+  // Kısayol ipuçları platforma göre: macOS'ta ⌘, diğerlerinde Ctrl.
+  (function kisayolEtiketleri() {
+    const mac = /Mac/i.test(navigator.platform || navigator.userAgent);
+    const m = mac ? "⌘" : "Ctrl+";
+    $("gunluk-arama").placeholder = `Ara (${m}F)`;
+    $("geri-al-btn").title = `Son işlemi geri al (${m}Z)`;
+    $("gonder-btn").title = `Talebi gönder (${m}Enter)`;
+  })();
+
   saatSecenekleriDoldur();
 })();

@@ -1,0 +1,23 @@
+{"no": 1, "komut": "rezervasyon", "durum": "TAMAM", "rezervasyon_id": "r1", "ucret": 4, "bakiye": 116}
+{"no": 2, "komut": "rezervasyon", "durum": "TAMAM", "rezervasyon_id": "r2", "ucret": 16, "bakiye": 284}
+{"no": 3, "komut": "rezervasyon", "durum": "TAMAM", "rezervasyon_id": "r3", "ucret": 4, "bakiye": 116}
+{"no": 4, "komut": "giris", "durum": "RED", "kod": "GIRIS_PENCERESI_DISI"}
+{"no": 5, "komut": "cikis", "durum": "RED", "kod": "DURUM_HATASI"}
+{"no": 6, "komut": "giris", "durum": "RED", "kod": "BULUNAMADI"}
+{"no": 7, "komut": "saat", "durum": "TAMAM", "olaylar": []}
+{"no": 8, "komut": "giris", "durum": "TAMAM", "yeni_durum": "KULLANIMDA"}
+{"no": 9, "komut": "saat", "durum": "TAMAM", "olaylar": [{"zaman": "2027-03-08T09:15", "tur": "GELMEDI", "rezervasyon": "r2", "kullanici": "u2", "guvenilirlik": 65}]}
+{"no": 10, "komut": "giris", "durum": "RED", "kod": "DURUM_HATASI"}
+{"no": 11, "komut": "saat", "durum": "TAMAM", "olaylar": [{"zaman": "2027-03-08T10:00", "tur": "TAMAMLANDI", "rezervasyon": "r1", "kullanici": "u1", "guvenilirlik": 82}]}
+{"no": 12, "komut": "saat", "durum": "TAMAM", "olaylar": []}
+{"no": 13, "komut": "giris", "durum": "TAMAM", "yeni_durum": "KULLANIMDA"}
+{"no": 14, "komut": "saat", "durum": "TAMAM", "olaylar": []}
+{"no": 15, "komut": "cikis", "durum": "TAMAM", "yeni_durum": "TAMAMLANDI", "guvenilirlik": 99, "olaylar": []}
+{"no": 16, "komut": "rezervasyon", "durum": "TAMAM", "rezervasyon_id": "r4", "ucret": 2, "bakiye": 114}
+{"no": 17, "komut": "rezervasyon", "durum": "TAMAM", "rezervasyon_id": "r5", "ucret": 2, "bakiye": 114}
+{"no": 18, "komut": "saat", "durum": "TAMAM", "olaylar": [{"zaman": "2027-03-08T11:15", "tur": "GELMEDI", "rezervasyon": "r4", "kullanici": "u1", "guvenilirlik": 67}]}
+{"no": 19, "komut": "giris", "durum": "TAMAM", "yeni_durum": "KULLANIMDA"}
+{"no": 20, "komut": "saat", "durum": "TAMAM", "olaylar": [{"zaman": "2027-03-08T12:30", "tur": "TAMAMLANDI", "rezervasyon": "r5", "kullanici": "u3", "guvenilirlik": 100}]}
+{"no": 21, "komut": "sorgu", "durum": "TAMAM", "bakiye": 114, "guvenilirlik": 100, "rezervasyonlar": [{"id": "r3", "kaynak": "ODA-1", "baslangic": "2027-03-08T10:30", "bitis": "2027-03-08T11:00", "durum": "TAMAMLANDI", "ucret": 4}, {"id": "r5", "kaynak": "ODA-1", "baslangic": "2027-03-08T12:00", "bitis": "2027-03-08T12:30", "durum": "TAMAMLANDI", "ucret": 2}]}
+{"no": 22, "komut": "sorgu", "durum": "TAMAM", "bakiye": 114, "guvenilirlik": 67, "rezervasyonlar": [{"id": "r1", "kaynak": "ODA-1", "baslangic": "2027-03-08T09:00", "bitis": "2027-03-08T10:00", "durum": "TAMAMLANDI", "ucret": 4}, {"id": "r4", "kaynak": "ODA-1", "baslangic": "2027-03-08T11:00", "bitis": "2027-03-08T11:30", "durum": "GELMEDI", "ucret": 2}]}
+{"no": 23, "komut": "sorgu", "durum": "TAMAM", "bakiye": 284, "guvenilirlik": 65, "rezervasyonlar": [{"id": "r2", "kaynak": "LAB-1", "baslangic": "2027-03-08T09:00", "bitis": "2027-03-08T11:00", "durum": "GELMEDI", "ucret": 16}]}

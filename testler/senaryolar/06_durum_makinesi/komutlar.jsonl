@@ -1,0 +1,23 @@
+{"komut": "rezervasyon", "kullanici": "u1", "kaynak": "ODA-1", "baslangic": "2027-03-08T09:00", "bitis": "2027-03-08T10:00"}
+{"komut": "rezervasyon", "kullanici": "u2", "kaynak": "LAB-1", "baslangic": "2027-03-08T09:00", "bitis": "2027-03-08T11:00"}
+{"komut": "rezervasyon", "kullanici": "u3", "kaynak": "ODA-1", "baslangic": "2027-03-08T10:30", "bitis": "2027-03-08T11:30"}
+{"komut": "giris", "rezervasyon": "r1"}
+{"komut": "cikis", "rezervasyon": "r1"}
+{"komut": "giris", "rezervasyon": "r99"}
+{"komut": "saat", "zaman": "2027-03-08T08:50"}
+{"komut": "giris", "rezervasyon": "r1"}
+{"komut": "saat", "zaman": "2027-03-08T09:15"}
+{"komut": "giris", "rezervasyon": "r2"}
+{"komut": "saat", "zaman": "2027-03-08T10:00"}
+{"komut": "saat", "zaman": "2027-03-08T10:20"}
+{"komut": "giris", "rezervasyon": "r3"}
+{"komut": "saat", "zaman": "2027-03-08T11:00"}
+{"komut": "cikis", "rezervasyon": "r3"}
+{"komut": "rezervasyon", "kullanici": "u1", "kaynak": "ODA-1", "baslangic": "2027-03-08T11:00", "bitis": "2027-03-08T11:30"}
+{"komut": "rezervasyon", "kullanici": "u3", "kaynak": "ODA-1", "baslangic": "2027-03-08T12:00", "bitis": "2027-03-08T12:30"}
+{"komut": "saat", "zaman": "2027-03-08T11:55"}
+{"komut": "giris", "rezervasyon": "r5"}
+{"komut": "saat", "zaman": "2027-03-08T12:30"}
+{"komut": "sorgu", "tur": "kullanici", "id": "u3"}
+{"komut": "sorgu", "tur": "kullanici", "id": "u1"}
+{"komut": "sorgu", "tur": "kullanici", "id": "u2"}

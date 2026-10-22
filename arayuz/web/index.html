@@ -42,13 +42,13 @@
           <div class="saat-etiket" id="saat-etiket">Simüle saat</div>
           <div class="saat-deger" id="saat-deger">—</div>
         </div>
-        <button class="btn btn-secondary btn-mono" id="artir-15-btn">+15dk</button>
-        <button class="btn btn-secondary btn-mono" id="artir-60-btn">+1s</button>
-        <button class="btn btn-secondary btn-mono" id="artir-gun-btn">+4s</button>
-        <button class="btn btn-mono" id="sonraki-olay-btn">⏭ Sonraki olay</button>
-        <button class="btn btn-mono" id="saate-git-btn">Saate git…</button>
+        <button class="btn btn-secondary btn-mono" id="artir-15-btn" title="Simüle saati 15 dakika ileri al (+)">+15 dk</button>
+        <button class="btn btn-secondary btn-mono" id="artir-60-btn" title="Simüle saati 1 saat ileri al">+1 sa</button>
+        <button class="btn btn-secondary btn-mono" id="artir-240-btn" title="Simüle saati 4 saat ileri al">+4 sa</button>
+        <button class="btn btn-mono" id="sonraki-olay-btn" title="Bir sonraki GELMEDI / TAMAMLANDI / sıfırlama anına atla">⏭ Sonraki olay</button>
+        <button class="btn btn-mono" id="saate-git-btn" title="Belirli bir tarih ve saate git">Saate git…</button>
         <div class="ayirac-dikey"></div>
-        <button class="btn btn-danger btn-mono" id="geri-al-btn">↶ Geri al</button>
+        <button class="btn btn-danger btn-mono" id="geri-al-btn" title="Son işlemi geri al">↶ Geri al</button>
         <button class="btn btn-ghost btn-ikon" id="tema-btn" title="Açık / koyu tema">☾</button>
         <select id="kullanici-secici" class="girdi" style="width:auto; min-width:170px;"></select>
         <button class="btn btn-primary btn-ikon" id="kullanici-ekle-btn" title="Yeni üye ekle">+</button>
@@ -135,7 +135,10 @@
             Sonrası <b id="ozet-sonrasi">—</b>
           </div>
         </div>
-        <button class="btn btn-primary btn-tam" id="gonder-btn" style="margin-top:10px;">Rezervasyon talep et</button>
+        <div class="satir gap-2" style="margin-top:10px;">
+          <button class="btn btn-secondary btn-mono" id="fiyat-sor-btn" title="fiyat komutunu gönderir; sonuç günlüğe yazılır">Fiyat sor</button>
+          <button class="btn btn-primary" id="gonder-btn" style="flex:1;">Rezervasyon talep et</button>
+        </div>
         <datalist id="saat-secenekleri"></datalist>
       </section>
 
@@ -153,6 +156,7 @@
             <button class="btn btn-secondary" id="rd-cikis-btn" style="flex:1;">Çıkış</button>
             <button class="btn btn-danger" id="rd-iptal-btn" style="flex:1;">İptal</button>
           </div>
+          <div id="rez-detay-sonuc"></div>
         </section>
 
         <section class="panel">
@@ -237,6 +241,29 @@
     <div class="satir" style="justify-content:space-between; margin-top:14px;">
       <button class="btn btn-ghost" data-kapat="kaynak-modal">Kapat</button>
       <button class="btn btn-primary" id="kk-ekle-btn">+ Ekle</button>
+    </div>
+  </div>
+</div>
+
+<!-- Saate git modalı -->
+<div class="modal-zemin gizli" id="saat-modal">
+  <div class="panel modal-kart" style="width:400px;">
+    <h2 class="panel-baslik">Saate git</h2>
+    <p class="panel-altyazi" style="margin-bottom:12px;">Şu an: <span class="mono" id="sm-simdi">—</span></p>
+    <hr class="ayirac" />
+    <div class="satir gap-2" style="margin-bottom:10px; align-items:flex-end;">
+      <div style="flex:1;"><label class="etiket" for="sm-tarih">Tarih</label><input class="girdi mono" type="date" id="sm-tarih" /></div>
+      <div style="width:110px;"><label class="etiket" for="sm-saat">Saat</label><input class="girdi mono" id="sm-saat" list="saat-secenekleri" placeholder="SS:DD" /></div>
+    </div>
+    <div class="satir gap-2" id="sm-hizli" style="flex-wrap:wrap; margin-bottom:4px;">
+      <button class="btn btn-ghost btn-mono girdi-sm" data-dk="30">+30 dk</button>
+      <button class="btn btn-ghost btn-mono girdi-sm" data-dk="120">+2 sa</button>
+      <button class="btn btn-ghost btn-mono girdi-sm" data-ertesi="1">Yarın 08:00</button>
+      <button class="btn btn-ghost btn-mono girdi-sm" data-ertesi="7">+1 hafta 08:00</button>
+    </div>
+    <div class="satir" style="justify-content:space-between; margin-top:14px;">
+      <button class="btn btn-ghost" data-kapat="saat-modal">Kapat</button>
+      <button class="btn btn-primary" id="sm-git-btn">Git ⏎</button>
     </div>
   </div>
 </div>
