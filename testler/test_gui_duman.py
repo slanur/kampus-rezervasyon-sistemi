@@ -85,3 +85,38 @@ def test_fiyat_onizlemesi_gunluge_yazilmaz(app):
     oturum.fiyat("u3", "CIH-1", "2027-03-08T14:00", "2027-03-08T16:00")
     assert [k["komut"]["komut"] for k in oturum.gunluk] == ["fiyat"]
     pencere.close()
+
+
+def test_geri_al_reddedilenleri_atlar_ve_gunlugu_korur(app):
+    pencere = AnaPencere()
+    oturum = pencere._oturum
+    oturum.dosya_yukle(os.path.join(ORNEK, "baslangic.json"))
+
+    oturum.kaynak_ekle("ODA-9", "Kapalı Oda", "ODA", [])                                 # TAMAM
+    oturum.fiyat("u3", "CIH-1", "2027-03-08T14:00", "2027-03-08T16:00")                  # günlüğe yazılır
+    oturum.rezervasyon("u3", "ODA-9", "2027-03-08T09:00", "2027-03-08T10:00")            # RED ROL_IZNI_YOK
+    assert [k["komut"]["komut"] for k in oturum.gunluk] == ["kaynak_ekle", "fiyat", "rezervasyon"]
+
+    # Son komut reddedildiği için geri alınan şey ODA-9'un eklenmesidir.
+    sonuc = oturum.geri_al()
+    assert sonuc["geri_alinan"]["komut"] == "kaynak_ekle"
+    assert "ODA-9" not in [k["id"] for k in oturum.kaynaklar()]
+    assert oturum.gunluk == []
+    assert not oturum.geri_al_yapilabilir()
+    pencere.close()
+
+
+def test_geri_al_onceki_reddi_ve_fiyati_gunlukte_tutar(app):
+    pencere = AnaPencere()
+    oturum = pencere._oturum
+    oturum.dosya_yukle(os.path.join(ORNEK, "baslangic.json"))
+
+    oturum.kullanici_ekle("u3", "Deneme", "OGRENCI", [], 120, 100)                       # RED ID_MEVCUT
+    oturum.fiyat("u3", "CIH-1", "2027-03-08T14:00", "2027-03-08T16:00")
+    oturum.rezervasyon("u3", "ODA-1", "2027-03-08T09:00", "2027-03-08T10:00")            # TAMAM r1
+
+    oturum.geri_al()
+    assert [(k["komut"]["komut"], k["sonuc"]["durum"]) for k in oturum.gunluk] == [
+        ("kullanici_ekle", "RED"), ("fiyat", "TAMAM")]
+    assert oturum.motor.rezervasyon_detayi("r1") is None
+    pencere.close()

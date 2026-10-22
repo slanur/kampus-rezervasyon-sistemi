@@ -116,3 +116,62 @@ def test_iptal_onizleme_durum_degistirmez():
     assert onizleme["oran"] == 100
     detay = m.rezervasyon_detayi(r["rezervasyon_id"])
     assert detay["durum"] == "ONAYLI"  # önizleme durumu değiştirmedi
+
+
+# --- Ücret dökümü (arayüzdeki "Nasıl hesaplandı?" paneli) ---------------------
+
+def test_ucret_dokumu_yuvarlamayi_ve_bant_dolulugunu_gosterir():
+    # Senaryo 01, 3. adım: 22,5 + 18 = 40,5 → 41 KP
+    m = motor()
+    m.kaynak_ekle("YAZ-2", "3B Yazıcı 2", "YAZICI", ["OGRENCI"])
+    m.rezervasyon("u1", "YAZ-1", "2027-03-08T10:00", "2027-03-08T11:00")
+    d = m.ucret_dokumu("u2", "YAZ-2", "2027-03-08T11:00", "2027-03-08T13:00")
+
+    assert d["gecerli"] and d["toplam"] == "40,5" and d["ucret"] == 41
+    bant_10_12, bant_12_14 = d["satirlar"]
+    assert (bant_10_12["dolu_dk"], bant_10_12["kapasite_dk"], bant_10_12["bant_carpan"]) == (60, 240, "1,25")
+    assert bant_10_12["tutar"] == "22,5" and bant_12_14["tutar"] == "18"
+    assert bant_10_12["pik_carpan"] == "1,5"
+
+
+def test_ucret_dokumu_toplami_her_zaman_fiyat_komutuyla_ayni():
+    m = motor()
+    m.rezervasyon("u1", "YAZ-1", "2027-03-08T09:00", "2027-03-08T11:00")
+    for kaynak, bas, bit in [("YAZ-1", "11:30", "14:15"), ("ODA-1", "09:45", "12:00"), ("CIH-1", "15:30", "18:00")]:
+        kullanici = "u3" if kaynak == "CIH-1" else "u2"
+        args = (kullanici, kaynak, f"2027-03-08T{bas}", f"2027-03-08T{bit}")
+        assert m.ucret_dokumu(*args)["ucret"] == m.fiyat(*args)["ucret"]
+
+
+def test_ucret_dokumu_gecersiz_talepte_yalnizca_kod_doner():
+    m = motor()
+    assert m.ucret_dokumu("u1", "CIH-1", "2027-03-08T09:00", "2027-03-08T10:00") == {"gecerli": False, "kod": "ROL_IZNI_YOK"}
+
+
+# --- Doluluk ısı şeridi --------------------------------------------------------
+
+def test_doluluk_seridi_tur_bazinda_bant_carpanini_verir():
+    m = motor()
+    m.rezervasyon("u1", "YAZ-1", "2027-03-08T10:00", "2027-03-08T11:30")   # 10–12 bandında 90/120 dk
+    seritler = {t["tur"]: t for t in m.doluluk_seridi("2027-03-08")["turler"]}
+    bant = seritler["YAZICI"]["bantlar"][1]
+    assert (bant["dolu_dk"], bant["kapasite_dk"], bant["doluluk_yuzde"], bant["bant_carpan"], bant["seviye"]) == (90, 120, 75, "1,75", 3)
+    assert bant["pik"] and bant["pik_carpan"] == "1,5"
+    assert not seritler["ODA"]["bantlar"][1]["pik"]  # ODA enerji yoğun değil
+
+
+# --- Ekleme ve ret açıklamaları --------------------------------------------------
+
+def test_ekleme_aciklamasi_hangi_alanin_gecersiz_oldugunu_soyler():
+    m = motor()
+    bakiye = m.ekleme_aciklamasi("GECERSIZ_DEGER", {"komut": "kullanici_ekle", "rol": "OGRENCI", "bakiye": 130, "guvenilirlik": 80})
+    guven = m.ekleme_aciklamasi("GECERSIZ_DEGER", {"komut": "kullanici_ekle", "rol": "OGRENCI", "bakiye": 100, "guvenilirlik": 150})
+    assert "Bakiye" in bakiye and "120" in bakiye
+    assert "Güvenilirlik" in guven and "150" in guven
+
+
+def test_izinli_rolu_olmayan_kaynakta_ret_aciklamasi_duzgun():
+    m = motor()
+    m.kaynak_ekle("ODA-9", "Kapalı Oda", "ODA", [])
+    metin = m.red_aciklamasi("u1", "ODA-9", "2027-03-08T09:00", "2027-03-08T10:00", "ROL_IZNI_YOK")
+    assert "hiçbir role açık değil" in metin

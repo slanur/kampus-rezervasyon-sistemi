@@ -5,7 +5,9 @@ bir kural bilgisi olduğu için GUI bunu bilmemeli (Bölüm 8.2, PROJE_ANALIZI.m
 """
 from __future__ import annotations
 
+import math
 from datetime import date, datetime, time, timedelta
+from fractions import Fraction
 
 from . import dogrulama, fiyat, hata_kodlari, sabitler, zaman
 from .depo import Depo
@@ -240,7 +242,9 @@ def red_aciklamasi(depo: Depo, kullanici_id: str, kaynak_id: str, baslangic: str
             )
         return f"{kullanici.rol} rolü en fazla {sinir} gün sonrası için rezervasyon yapabilir."
     if kod == "ROL_IZNI_YOK":
-        izinli = ", ".join(kaynak.izinli_roller) or "hiçbir rol"
+        if not kaynak.izinli_roller:
+            return f"{kaynak.ad} hiçbir role açık değil; bu kaynak rezerve edilemez."
+        izinli = ", ".join(kaynak.izinli_roller)
         return f"{kaynak.ad} yalnızca şu rollere açık: {izinli}. Sizin rolünüz {kullanici.rol}."
     if kod == "SERTIFIKA_YOK":
         return f"{kaynak.tur} türündeki kaynaklar için {tur.sertifika} sertifikası gerekiyor."
@@ -270,6 +274,119 @@ def red_aciklamasi(depo: Depo, kullanici_id: str, kaynak_id: str, baslangic: str
         ucret = fiyat.hesapla(depo, kaynak_id, b, e)
         return f"Bu rezervasyon {ucret} KP tutuyor, bakiyeniz {kullanici.bakiye} KP."
     return genel
+
+
+def ekleme_aciklamasi(depo: Depo, kod: str, komut: dict) -> str:
+    """`kullanici_ekle` / `kaynak_ekle` reddini, hangi alanın sorunlu olduğunu söyleyerek açıklar.
+
+    Kontroller `dogrulama`daki ekleme kurallarıyla aynı sırayı izler.
+    """
+    genel = hata_kodlari.aciklama(kod)
+    kullanici_mi = komut.get("komut") == "kullanici_ekle"
+    if kod == "ID_MEVCUT":
+        ne = "kullanıcı" if kullanici_mi else "kaynak"
+        return f"{komut.get('id')} kimliğiyle bir {ne} zaten var."
+    if kod == "TANIMSIZ_DEGER":
+        if kullanici_mi:
+            return f"{komut.get('rol')} rolü başlangıç dosyasında tanımlı değil."
+        if komut.get("tur") not in depo.turler:
+            return f"{komut.get('tur')} türü başlangıç dosyasında tanımlı değil."
+        tanimsiz = [r for r in komut.get("izinli_roller") or [] if r not in depo.roller]
+        return f"Şu roller başlangıç dosyasında tanımlı değil: {', '.join(tanimsiz)}."
+    if kod == "GECERSIZ_DEGER" and kullanici_mi:
+        rol = depo.roller.get(komut.get("rol"))
+        bakiye, guvenilirlik = komut.get("bakiye"), komut.get("guvenilirlik")
+        if rol is not None and (type(bakiye) is not int or not 0 <= bakiye <= rol.haftalik_kota):
+            return (
+                f"Bakiye 0 ile {komut.get('rol')} rolünün haftalık kotası ({rol.haftalik_kota}) arasında "
+                f"bir tam sayı olmalı; girilen: {bakiye}."
+            )
+        return f"Güvenilirlik 0 ile 100 arasında bir tam sayı olmalı; girilen: {guvenilirlik}."
+    return genel
+
+
+def _sayi_metni(deger: Fraction) -> str:
+    """Kesri Türkçe ondalık yazımla gösterir: 9/2 -> "4,5", 45/8 -> "5,625"."""
+    if deger.denominator == 1:
+        return str(deger.numerator)
+    return f"{float(deger):.3f}".rstrip("0").rstrip(".").replace(".", ",")
+
+
+def ucret_dokumu(depo: Depo, kullanici_id: str, kaynak_id: str, baslangic: str, bitis: str) -> dict:
+    """Bir talebin ücretinin bant bant dökümü (K5). Durum değiştirmez.
+
+    Talep `fiyat` komutunun kontrollerinden geçmiyorsa yalnızca hata kodu döner.
+    Satırlar `fiyat.bant_dokumu()`ndan gelir; toplam, modülün gerçek ücretiyle aynıdır.
+    """
+    try:
+        b, e = zaman.parse(baslangic), zaman.parse(bitis)
+    except (TypeError, ValueError):
+        return {"gecerli": False, "kod": "ZAMAN_ADIMI_HATASI"}
+    kod, ucret = dogrulama.dogrula(depo, kullanici_id, kaynak_id, b, e, depo.saat, bakiye_kontrol=False)
+    if kod is not None:
+        return {"gecerli": False, "kod": kod}
+
+    kaynak = depo.kaynaklar[kaynak_id]
+    tur = depo.turler[kaynak.tur]
+    satirlar = fiyat.bant_dokumu(depo, kaynak_id, b, e)
+    toplam = sum((s["tutar"] for s in satirlar), Fraction(0))
+    return {
+        "gecerli": True,
+        "kaynak": kaynak.id,
+        "tur": kaynak.tur,
+        "temel_ucret": tur.temel_ucret,
+        "enerji_yogun": tur.enerji_yogun,
+        "pik": [sabitler.PIK_BASLANGIC, sabitler.PIK_BITIS],
+        "satirlar": [
+            {
+                "bant": f"{_saat_metni(s['bant_b'])}–{_saat_metni(s['bant_e'])}",
+                "aralik": f"{_saat_metni(s['alt'])}–{_saat_metni(s['ust'])}",
+                "dilim": s["dilim_sayisi"],
+                "dilim_ucreti": _sayi_metni(s["dilim_ucreti"]),
+                "dolu_dk": s["dolu_dk"],
+                "kaynak_sayisi": s["kaynak_sayisi"],
+                "kapasite_dk": s["kaynak_sayisi"] * 120,
+                "doluluk": _sayi_metni(s["doluluk"]),
+                "bant_carpan": _sayi_metni(s["bant_carpan"]),
+                "pik": s["pik"],
+                "pik_carpan": _sayi_metni(s["pik_carpan"]),
+                "tutar": _sayi_metni(s["tutar"]),
+            }
+            for s in satirlar
+        ],
+        "toplam": _sayi_metni(toplam),
+        "ucret": ucret,
+    }
+
+
+def doluluk_seridi(depo: Depo, gun: str) -> dict:
+    """Seçilen günde her tür için bant bant doluluk ve bant çarpanı (K5). Durum değiştirmez.
+
+    Takvimin üstündeki ısı şeridini besler; kullanıcı ucuz saatleri bir bakışta görür.
+    """
+    gun_date = zaman.gun_parse(gun)
+    turler = []
+    for tur_adi, tur in depo.turler.items():
+        if depo.turdeki_kaynak_sayisi(tur_adi) == 0:
+            continue
+        bantlar = []
+        for bant_bas_saat, bant_bit_saat in sabitler.BANTLAR:
+            bant_b = datetime.combine(gun_date, time(bant_bas_saat, 0))
+            bant_e = datetime.combine(gun_date, time(bant_bit_saat, 0))
+            dolu_dk, sayi = fiyat._dolu_dakika(depo, tur_adi, gun_date, bant_b, bant_e)
+            doluluk = Fraction(dolu_dk, sayi * 120)
+            bantlar.append({
+                "bant": f"{_saat_metni(bant_b)}–{_saat_metni(bant_e)}",
+                "dolu_dk": dolu_dk,
+                "kapasite_dk": sayi * 120,
+                "doluluk_yuzde": round(float(doluluk) * 100),
+                "bant_carpan": _sayi_metni(fiyat.bant_carpani(doluluk)),
+                "seviye": min(4, math.floor(4 * doluluk)),
+                "pik": (pik := tur.enerji_yogun and fiyat.zaman_pik_mi(bant_bas_saat, bant_bit_saat)),
+                "pik_carpan": _sayi_metni(sabitler.PIK_CARPAN if pik else sabitler.NORMAL_CARPAN),
+            })
+        turler.append({"tur": tur_adi, "kaynak_sayisi": depo.turdeki_kaynak_sayisi(tur_adi), "bantlar": bantlar})
+    return {"turler": turler}
 
 
 _ONERI_GUN_UFKU = 7

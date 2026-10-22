@@ -81,6 +81,9 @@
     dosyaAcildi();
     S.paramCache = null;
     S.seciliRezId = null;
+    sonucKapat();
+    kartSonucTemizle();
+    modArayuzu("tek");
     const simdi = await K.cagir("simdi");
     S.seciliGun = simdi.split("T")[0];
     gunEtiketiGuncelle();
@@ -105,8 +108,21 @@
   K.onDurumDegisti(() => tumunuYenile());
 
   async function tumunuYenile() {
-    await Promise.all([ustBarYenile(), takvimYenile(), kullaniciPaneliYenile(), gunlukYenile(), rezDetayYenile(), kullanicilariDoldur()]);
+    await Promise.all([ustBarYenile(), takvimYenile(), kullaniciPaneliYenile(), gunlukYenile(), rezDetayYenile(), kullanicilariDoldur(), formKaynaklariniTazele()]);
     fiyatlariGuncelleGecikmeli();
+  }
+
+  // Kaynak eklenince/geri alınınca formdaki seçim listeleri güncellenir; artık
+  // var olmayan bir kaynak seçili kaldıysa ilk kaynağa geçilir.
+  let formKaynakImzasi = "";
+  async function formKaynaklariniTazele() {
+    const kaynaklar = await K.cagir("kaynaklar");
+    const imza = kaynaklar.map((k) => k.id).join("|");
+    const eksik = S.kalemler.some((k) => !kaynaklar.some((x) => x.id === k.kaynak));
+    if (imza === formKaynakImzasi && !eksik) return;
+    formKaynakImzasi = imza;
+    S.kalemler.forEach((k) => { if (!kaynaklar.some((x) => x.id === k.kaynak)) k.kaynak = kaynaklar[0]?.id || ""; });
+    await kalemleriCiz();
   }
 
   // ------------------------------------------------------------------
@@ -274,7 +290,12 @@
         lines: olaylar.length ? await olaySatirlari(olaylar) : ["Olay oluşmadı."],
       });
     } else {
-      gosterSonuc({ ok: false, title: "SAAT_GERI", lines: [await K.cagir("hata_aciklamasi", { kod: sonuc.kod })] });
+      const simdi = await K.cagir("simdi");
+      const t = (iso) => (iso && iso.length >= 16 ? `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)} ${iso.slice(11, 16)}` : iso || "—");
+      const mesaj = sonuc.kod === "SAAT_GERI"
+        ? `Simüle saat şu an ${t(simdi)}; istenen zaman (${t(hedefIso)}) bundan önce. Saat yalnızca ileri alınabilir.`
+        : await K.cagir("hata_aciklamasi", { kod: sonuc.kod });
+      gosterSonuc({ ok: false, title: "Saat ilerletilemedi", kod: sonuc.kod, mesaj });
     }
   }
   // Olay satırı: ne zaman, ne oldu, kime, sonucu ne (güvenilirlik / ücret / bakiye).
@@ -307,7 +328,10 @@
     await oynatDurdur();
     const mevcut = await K.cagir("simdi");
     $("sm-simdi").textContent = mevcut.replace("T", " ");
-    saatModalDoldur(mevcut);
+    // Kullanıcı takvimde ileri bir güne gittiyse büyük ihtimalle o güne gitmek istiyor.
+    const [[bh, bm]] = (await parametrelerAl()).calisma_saatleri;
+    const p2 = (n) => String(n).padStart(2, "0");
+    saatModalDoldur(S.seciliGun && S.seciliGun > mevcut.slice(0, 10) ? `${S.seciliGun}T${p2(bh)}:${p2(bm)}` : mevcut);
     $("saat-modal").classList.remove("gizli");
     $("sm-saat").focus();
     $("sm-saat").select();
@@ -334,7 +358,25 @@
     saatModalDoldur(isoYerel(d));
     $("sm-saat").focus();
   }));
-  $("geri-al-btn").addEventListener("click", () => K.cagir("geri_al"));
+  $("geri-al-btn").addEventListener("click", async () => {
+    const sonuc = await K.cagir("geri_al");
+    sonucKapat();
+    kartSonucTemizle();
+    if (sonuc && sonuc.geri_alinan) gosterSonuc({ ok: true, title: "Geri alındı", lines: [komutOzeti(sonuc.geri_alinan)] });
+  });
+
+  function komutOzeti(k) {
+    const t = (iso) => (iso && iso.length >= 16 ? `${iso.slice(8, 10)}.${iso.slice(5, 7)} ${iso.slice(11, 16)}` : iso || "");
+    switch (k.komut) {
+      case "rezervasyon": case "bekleme": case "fiyat":
+        return `${k.komut} · ${k.kullanici} · ${k.kaynak} · ${t(k.baslangic)}–${(k.bitis || "").slice(11)}`;
+      case "paket": return `paket · ${k.kullanici} · ${(k.kalemler || []).length} kalem`;
+      case "iptal": case "giris": case "cikis": return `${k.komut} · ${k.rezervasyon}`;
+      case "saat": return `saat → ${t(k.zaman)}`;
+      case "kullanici_ekle": case "kaynak_ekle": return `${k.komut} · ${k.id} (${k.ad})`;
+      default: return k.komut;
+    }
+  }
 
   async function kaydirilmisSaat(dakika) {
     await oynatDurdur();
@@ -396,6 +438,7 @@
         const li = document.createElement("li");
         li.className = "sonuc-kalem " + (k.durum === "TAMAM" ? "gecti" : "red");
         li.textContent = `Kalem ${i + 1} · ${k.kaynak || ""} → ${k.durum === "TAMAM" ? "geçti" : k.mesaj || k.kod}`;
+        if (k.durum !== "TAMAM" && k.kod) li.appendChild(kodCipi(k.kod));
         ul.appendChild(li);
       });
       icerik.appendChild(ul);
@@ -449,9 +492,12 @@
 
   async function takvimYenile() {
     if (!(await K.yukluMu()) || !S.seciliGun) return;
-    const gunVeri = await K.cagir("gun_gorunumu", { gun: S.seciliGun });
+    const [gunVeri, doluluk] = await Promise.all([
+      K.cagir("gun_gorunumu", { gun: S.seciliGun }),
+      K.cagir("doluluk_seridi", { gun: S.seciliGun }),
+    ]);
     const simdi = await gorunenSimdi();
-    Takvim.goster(gunVeri, S.seciliGun, simdi, S.filtreAktif ? S.seciliKullanici : null);
+    Takvim.goster(gunVeri, S.seciliGun, simdi, S.filtreAktif ? S.seciliKullanici : null, doluluk);
   }
 
   function gunDegistir(delta) {
@@ -647,11 +693,15 @@
     return { bas: f(taban), bit: f(bitis) };
   }
 
-  function modSec(mod) {
+  function modArayuzu(mod) {
     S.mod = mod;
     document.querySelectorAll(".segment-opsiyon").forEach((o) => o.classList.toggle("secili", o.dataset.mod === mod));
     $("paket-dugmeler").style.display = mod === "paket" ? "flex" : "none";
     $("fiyat-sor-btn").style.display = mod === "paket" ? "none" : "";
+  }
+
+  function modSec(mod) {
+    modArayuzu(mod);
     if (mod === "tek") {
       S.kalemler = S.kalemler.slice(0, 1);
     } else if (S.kalemler.length < 2) {
@@ -826,6 +876,7 @@
     const guncel = () => tur === fiyatTuru;
     if (S.sonOnay) { onayliFormuGoster(); return; }
     let toplam = 0;
+    let hataVar = false;
     let oneriTalebi = null;
     for (let i = 0; i < S.kalemler.length; i++) {
       const kalem = S.kalemler[i];
@@ -846,13 +897,17 @@
         } else {
           const mesaj = await K.cagir("red_aciklamasi", { ...args, kod: sonuc.kod });
           if (!guncel()) return;
+          hataVar = true;
           if (span) { span.textContent = "✕"; span.style.color = "var(--destructive)"; span.title = sonuc.kod; }
           kalemUyarisiGoster(i, mesaj, sonuc.kod);
           if (S.mod === "tek" && i === 0) oneriTalebi = args;
         }
       } catch (e) { /* köprü hatası: önizleme sessizce boş kalır */ }
     }
-    $("ucret-toplam").textContent = `${toplam} KP`;
+    // Geçersiz bir kalem varken talep reddedilecek; kısmi bir toplam göstermek yanıltır.
+    if (hataVar) toplam = 0;
+    $("ucret-toplam").textContent = hataVar ? "— KP" : `${toplam} KP`;
+    ucretDokumunuGuncelle();
 
     const oneriKutu = $("oneri-kutu");
     if (oneriTalebi) {
@@ -877,6 +932,74 @@
 
   // Talep az önce onaylandıysa aynı aralığı tekrar fiyatlamak "KESISME" (kendi
   // rezervasyonuyla çakışma) gösterir ve kullanıcıyı yanıltır; onun yerine onay notu gösterilir.
+  // ------------------------------------------------------------------
+  // Ücret dökümü (K5) — hesabı modül yapar (`ucret_dokumu`), burada yalnızca tablo çizilir.
+  // ------------------------------------------------------------------
+  let dokumAcik = false;
+  $("dokum-btn").addEventListener("click", () => { dokumAcik = !dokumAcik; ucretDokumunuGuncelle(); });
+
+  async function ucretDokumunuGuncelle() {
+    const kutu = $("ucret-dokum");
+    $("dokum-btn").textContent = dokumAcik ? "Hesabı gizle ▴" : "Nasıl hesaplandı? ▾";
+    if (!dokumAcik || S.sonOnay) { kutu.style.display = "none"; kutu.innerHTML = ""; return; }
+    const tur = fiyatTuru;
+    const dokumler = [];
+    for (const kalem of S.kalemler) {
+      if (!kalem.kaynak || !kalem.bas || !kalem.bit) continue;
+      const d = await K.cagir("ucret_dokumu", talepArgumanlari(kalem));
+      if (tur !== fiyatTuru) return; // bu arada form değişti; yeni tur kendi dökümünü çizer
+      dokumler.push(d);
+    }
+    kutu.innerHTML = "";
+    dokumler.forEach((d, i) => kutu.appendChild(dokumTablosu(d, S.kalemler.length > 1 ? `Kalem ${i + 1} · ` : "")));
+    kutu.style.display = dokumler.length ? "block" : "none";
+  }
+
+  function dokumTablosu(d, onEk) {
+    const el = (etiket, sinif, metin) => {
+      const e = document.createElement(etiket);
+      if (sinif) e.className = sinif;
+      if (metin !== undefined) e.textContent = metin;
+      return e;
+    };
+    const kart = el("div", "dokum");
+    if (!d.gecerli) {
+      const not = el("p", "dokum-not", `${onEk}Talep geçersiz olduğu için ücret hesaplanmaz.`);
+      not.appendChild(kodCipi(d.kod));
+      kart.appendChild(not);
+      return kart;
+    }
+    const dilimUcreti = d.satirlar[0] ? d.satirlar[0].dilim_ucreti : "—";
+    kart.appendChild(el("div", "dokum-baslik",
+      `${onEk}${d.kaynak} · ${d.tur} · saatlik ${d.temel_ucret} KP → 15 dk'lık dilim ${dilimUcreti} KP`));
+
+    const tablo = el("table", "dokum-tablo");
+    const ust = el("tr");
+    [["Bant", ""], ["Aralık", "Talebin bu banda düşen kısmı"], ["Dilim", "15 dakikalık dilim sayısı"],
+     ["Doluluk", "Aynı türde o bantta dolu dakika ÷ (kaynak sayısı × 120). Yalnız ONAYLI ve KULLANIMDA rezervasyonlar sayılır; talebin kendisi sayılmaz."],
+     ["Bant ×", "1 + 0,25 × ⌊4 × doluluk⌋"], ["Pik ×", "Enerji yoğun türde pik saatlerde artar"], ["Tutar", "dilim × dilim ücreti × bant çarpanı × pik çarpanı"]]
+      .forEach(([b, ipucu]) => { const th = el("th", null, b); if (ipucu) th.title = ipucu; ust.appendChild(th); });
+    tablo.appendChild(ust);
+    d.satirlar.forEach((s) => {
+      const tr = el("tr");
+      [s.bant, s.aralik, String(s.dilim), `${s.dolu_dk}/${s.kapasite_dk} dk = ${s.doluluk}`,
+       `×${s.bant_carpan}`, `×${s.pik_carpan}`, `${s.tutar} KP`].forEach((v, i) => {
+        const td = el("td", null, v);
+        if (i === 4 && s.bant_carpan !== "1") td.className = "vurgu";
+        if (i === 5 && s.pik) td.className = "vurgu";
+        tr.appendChild(td);
+      });
+      tablo.appendChild(tr);
+    });
+    kart.appendChild(tablo);
+
+    const yuvarlandi = d.toplam !== String(d.ucret);
+    kart.appendChild(el("div", "dokum-toplam",
+      yuvarlandi ? `Toplam ${d.toplam} KP → en yakın tam sayıya yuvarlanır (,5 yukarı): ${d.ucret} KP` : `Toplam: ${d.ucret} KP`));
+    if (!d.enerji_yogun) kart.appendChild(el("div", "dokum-not", `${d.tur} enerji yoğun değil; pik saatlerde de çarpan 1.`));
+    return kart;
+  }
+
   async function onayliFormuGoster() {
     S.kalemler.forEach((_, i) => {
       const span = $(`kalem-ucret-${i}`);
@@ -886,6 +1009,7 @@
     kalemUyarisiGoster(0, `Onaylandı: ${S.sonOnay.rezler.join(", ")}. Yeni bir talep için alanları değiştir ya da takvimde boş bir alanı sürükle.`, null, true);
     $("ucret-toplam").textContent = "— KP";
     $("oneri-kutu").style.display = "none";
+    ucretDokumunuGuncelle();
     const kullanici = (await K.cagir("kullanicilar")).find((u) => u.id === S.seciliKullanici);
     if (kullanici) {
       $("ozet-bakiye").textContent = `${kullanici.bakiye} KP`;
@@ -895,7 +1019,7 @@
   }
 
   $("kalem-ekle-btn").addEventListener("click", async () => {
-    if (S.kalemler.length >= 4) return;
+    if (S.kalemler.length >= 8) return; // yalnızca ekran düzeni için üst sınır; 5+ kalem PAKET_BOYUTU ile modülden döner
     const kaynaklar = await K.cagir("kaynaklar");
     const kid = kaynaklar[S.kalemler.length % kaynaklar.length]?.id;
     S.kalemler.push({ kaynak: kid, bas: "11:00", bit: "12:00" });
@@ -903,7 +1027,7 @@
     formDegisti();
   });
   $("kalem-sil-btn").addEventListener("click", () => {
-    if (S.kalemler.length <= 2) return;
+    if (S.kalemler.length <= 1) return;
     S.kalemler.pop();
     kalemleriCiz();
     formDegisti();
@@ -991,7 +1115,7 @@
         `<span class="nokta nokta-${durum === "TAMAM" ? "ONAYLI" : "IPTAL"}"></span>` +
         `<span style="color:var(--muted-foreground);">#${k.no}</span>` +
         `<span style="font-weight:600;">${k.komut.komut || ""}</span>` +
-        `<span class="log-sonuc-kisa">${kod}</span>`;
+        `<span class="log-sonuc-kisa" title="${kod}">${kod}</span>`;
       btn.addEventListener("click", () => {
         S.gunlukSecimNo = S.gunlukSecimNo === k.no ? null : k.no;
         gunlukYenile();
@@ -1043,14 +1167,25 @@
   $("ku-ekle-btn").addEventListener("click", async () => {
     const id = $("ku-id").value.trim();
     const sertifikalar = [...document.querySelectorAll("#ku-sertifikalar input:checked")].map((c) => c.value);
-    const sonuc = await K.cagir("kullanici_ekle", {
+    const args = {
       id, ad: $("ku-ad").value.trim() || id, rol: $("ku-rol").value,
       sertifikalar, bakiye: Number($("ku-bakiye").value), guvenilirlik: Number($("ku-guven").value),
-    });
+    };
+    const sonuc = await K.cagir("kullanici_ekle", args);
     const el = $("ku-sonuc");
     el.style.display = "block";
-    if (sonuc.durum === "TAMAM") { el.style.color = "var(--success)"; el.textContent = `✓ Kullanıcı ${id} eklendi.`; $("ku-id").value = ""; }
-    else { const a = await K.cagir("hata_aciklamasi", { kod: sonuc.kod }); el.style.color = "var(--destructive)"; el.textContent = `✖ ${sonuc.kod} — ${a}`; }
+    if (sonuc.durum === "TAMAM") {
+      el.style.color = "var(--success)"; el.textContent = `✓ ${args.ad} (${id}) eklendi ve seçildi.`; $("ku-id").value = "";
+      // Ekleyen kişi büyük ihtimalle hemen bu kullanıcı adına işlem yapacak.
+      S.seciliKullanici = id;
+      await kullanicilariDoldur();
+      kullaniciPaneliYenile();
+      takvimYenile();
+      formDegisti();
+    } else {
+      const a = await K.cagir("ekleme_aciklamasi", { kod: sonuc.kod, komut: { komut: "kullanici_ekle", ...args } });
+      el.style.color = "var(--destructive)"; el.textContent = `✖ ${sonuc.kod} — ${a}`;
+    }
   });
 
   async function kaynakModalAc() {
@@ -1067,11 +1202,15 @@
   $("kk-ekle-btn").addEventListener("click", async () => {
     const id = $("kk-id").value.trim();
     const izinliRoller = [...document.querySelectorAll("#kk-roller input:checked")].map((c) => c.value);
-    const sonuc = await K.cagir("kaynak_ekle", { id, ad: $("kk-ad").value.trim() || id, tur: $("kk-tur").value, izinli_roller: izinliRoller });
+    const args = { id, ad: $("kk-ad").value.trim() || id, tur: $("kk-tur").value, izinli_roller: izinliRoller };
+    const sonuc = await K.cagir("kaynak_ekle", args);
     const el = $("kk-sonuc");
     el.style.display = "block";
     if (sonuc.durum === "TAMAM") { el.style.color = "var(--success)"; el.textContent = `✓ Kaynak ${id} eklendi.`; $("kk-id").value = ""; }
-    else { const a = await K.cagir("hata_aciklamasi", { kod: sonuc.kod }); el.style.color = "var(--destructive)"; el.textContent = `✖ ${sonuc.kod} — ${a}`; }
+    else {
+      const a = await K.cagir("ekleme_aciklamasi", { kod: sonuc.kod, komut: { komut: "kaynak_ekle", ...args } });
+      el.style.color = "var(--destructive)"; el.textContent = `✖ ${sonuc.kod} — ${a}`;
+    }
   });
 
   // ------------------------------------------------------------------

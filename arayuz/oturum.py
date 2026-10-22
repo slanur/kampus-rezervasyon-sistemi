@@ -21,7 +21,9 @@ class Oturum(QObject):
         self.motor: Motor | None = None
         self.dosya_yolu: str | None = None
         self.gunluk: list[dict] = []
-        self._replay: list[tuple[str, dict]] = []
+        # Günlüğe yazılan her komut: (komut, durumu gerçekten değiştirdi mi).
+        # Geri al, sonuncu "değiştiren" komutu atlayarak geri kalanı tekrar oynatır.
+        self._replay: list[tuple[dict, bool]] = []
 
     # ------------------------------------------------------------------
     # Dosya
@@ -40,8 +42,9 @@ class Oturum(QObject):
     # ------------------------------------------------------------------
     def _kaydet(self, komut: dict, sonuc: dict, degistirir: bool) -> dict:
         self.gunluk.append({"no": len(self.gunluk) + 1, "komut": komut, "sonuc": sonuc})
+        # RED sonucu hiçbir zaman durumu değiştirmez (çekirdeğin sözleşmesi).
+        self._replay.append((komut, degistirir and sonuc.get("durum") == "TAMAM"))
         if degistirir:
-            self._replay.append((komut["komut"], komut))
             self.durum_degisti.emit()
         return sonuc
 
@@ -114,21 +117,31 @@ class Oturum(QObject):
     # değiştiren işlem hariç tüm çağrıları tekrar oynatır.
     # ------------------------------------------------------------------
     def geri_al_yapilabilir(self) -> bool:
-        return bool(self._replay) and self.dosya_yolu is not None
+        return self.dosya_yolu is not None and any(degistirdi for _, degistirdi in self._replay)
 
-    def geri_al(self) -> None:
+    def geri_al(self) -> dict | None:
+        """Son durum değiştiren komutu geri alır; geri alınan komutu döndürür.
+
+        Reddedilen komutlar ve sorgular atlanmaz, günlükte kalır. Yalnızca geri
+        alınan komut ve ondan sonra gelenler (hepsi durumu değiştirmemiş
+        komutlardır) günlükten düşer.
+        """
         if not self.geri_al_yapilabilir():
-            return
-        self._replay.pop()
-        tekrar = list(self._replay)
+            return None
+        son = max(i for i, (_, degistirdi) in enumerate(self._replay) if degistirdi)
+        geri_alinan = self._replay[son][0]
+        tekrar = [komut for komut, _ in self._replay[:son]]
         self.motor = Motor.dosyadan(self.dosya_yolu)
         self.gunluk = []
         self._replay = []
-        for _, komut in tekrar:
-            fn = getattr(self, komut["komut"])
+        for komut in tekrar:
+            ad = komut["komut"]
             kwargs = {k: v for k, v in komut.items() if k != "komut"}
-            fn(**kwargs)
+            if ad == "sorgu":
+                ad = "sorgu_kullanici" if kwargs.pop("tur") == "kullanici" else "sorgu_kaynak"
+            getattr(self, ad)(**kwargs)
         self.durum_degisti.emit()
+        return {"geri_alinan": geri_alinan}
 
     # ------------------------------------------------------------------
     # Görünüm API'si — doğrudan motora yönlendirilir (salt okunur)

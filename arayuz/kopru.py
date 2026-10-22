@@ -46,6 +46,9 @@ _IZINLI_YONTEMLER = {
     "uygun_araliklar",
     "sonraki_olay_zamani",
     "iptal_onizleme",
+    "ucret_dokumu",
+    "doluluk_seridi",
+    "ekleme_aciklamasi",
 }
 
 

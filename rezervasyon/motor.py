@@ -221,6 +221,15 @@ class Motor:
     def sonraki_olay_zamani(self) -> str | None:
         return gorunum.sonraki_olay_zamani(self.depo)
 
+    def ucret_dokumu(self, kullanici: str, kaynak: str, baslangic: str, bitis: str) -> dict:
+        return gorunum.ucret_dokumu(self.depo, kullanici, kaynak, baslangic, bitis)
+
+    def doluluk_seridi(self, gun: str) -> dict:
+        return gorunum.doluluk_seridi(self.depo, gun)
+
+    def ekleme_aciklamasi(self, kod: str, komut: dict) -> str:
+        return gorunum.ekleme_aciklamasi(self.depo, kod, komut)
+
     def iptal_onizleme(self, id: str) -> dict | None:
         return gorunum.iptal_onizleme(self.depo, id)
 
