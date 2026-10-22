@@ -89,6 +89,8 @@
             <span class="efsane-oge"><span class="nokta nokta-IPTAL"></span>IPTAL</span>
             <span class="efsane-oge"><span class="efsane-desen hatch"></span>Bakım</span>
             <span class="efsane-oge"><span class="efsane-desen hatch-prep"></span>Hazırlık</span>
+            <span class="efsane-oge" title="Üstteki şerit: türdeki kaynakların o iki saatlik banttaki doluluğu ve bant çarpanı. Koyulaştıkça fiyat artar."><span class="efsane-desen ds-ornek"></span>Doluluk</span>
+            <span class="efsane-oge" title="Enerji yoğun türlerde pik saat çarpanı uygulanan bantlar"><span class="efsane-desen ds-pik-ornek"></span>Pik saat</span>
           </div>
           <label class="onay-kutu"><input type="checkbox" id="filtre-kutusu" />Yalnız seçili kullanıcı</label>
         </div>
@@ -129,12 +131,14 @@
           <div>
             <div class="ucret-etiket">Tahmini ücret</div>
             <div class="ucret-toplam" id="ucret-toplam">0 KP</div>
+            <button class="btn-baglanti" id="dokum-btn" title="Ücretin bant bant nasıl hesaplandığını göster (K5)">Nasıl hesaplandı? ▾</button>
           </div>
           <div class="bakiye-ozet">
             Bakiye <b id="ozet-bakiye">—</b><br />
             Sonrası <b id="ozet-sonrasi">—</b>
           </div>
         </div>
+        <div id="ucret-dokum" style="display:none;"></div>
         <div class="satir gap-2" style="margin-top:10px;">
           <button class="btn btn-secondary btn-mono" id="fiyat-sor-btn" title="fiyat komutunu gönderir; sonuç günlüğe yazılır">Fiyat sor</button>
           <button class="btn btn-primary" id="gonder-btn" style="flex:1;">Rezervasyon talep et</button>

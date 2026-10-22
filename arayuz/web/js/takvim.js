@@ -11,7 +11,7 @@ window.Takvim = (function () {
   const KUTU_YUKSEKLIK = 30;
 
   let kapsayici, govde;
-  let veri = {}, gunIso = null, simdiIso = null, sadeceKullanici = null;
+  let veri = {}, gunIso = null, simdiIso = null, sadeceKullanici = null, doluluk = null;
   let onRezTikla = () => {}, onBosAlanSec = () => {};
   let surukleme = null;
 
@@ -37,8 +37,9 @@ window.Takvim = (function () {
     new ResizeObserver(() => cizYeniden()).observe(kapsayici);
   }
 
-  function goster(yeniVeri, gun, simdi, filtre) {
+  function goster(yeniVeri, gun, simdi, filtre, yeniDoluluk) {
     veri = yeniVeri || {};
+    doluluk = yeniDoluluk || null;
     gunIso = gun;
     simdiIso = simdi;
     sadeceKullanici = filtre || null;
@@ -68,6 +69,7 @@ window.Takvim = (function () {
       const s = el("span", null, cetvel);
       s.textContent = `${String(saat).padStart(2, "0")}:00`;
     }
+    dolulukSeridiCiz();
 
     // 1. geçiş: boş satır iskeletlerini DOM'a ekle (genişlik ölçülebilsin diye)
     const satirlar = kaynaklar.map((k) => iskeletOlustur(k));
@@ -86,6 +88,28 @@ window.Takvim = (function () {
     simdiyiGuncelle();
 
     kurEtkilesim(genislik);
+  }
+
+  // Isı şeridi: her tür için iki saatlik bantların doluluğu ve bant çarpanı.
+  // Değerler modülden (`doluluk_seridi`) gelir; burada yalnızca renklendirilir.
+  function dolulukSeridiCiz() {
+    if (!doluluk || !doluluk.turler || !doluluk.turler.length) return;
+    const ds = el("div", null, govde);
+    ds.id = "doluluk-seridi";
+    doluluk.turler.forEach((t) => {
+      const satir = el("div", "ds-satir", ds);
+      const etiket = el("div", "ds-etiket", satir);
+      etiket.textContent = t.tur;
+      const alt = el("span", "ds-alt", etiket);
+      alt.textContent = ` · ${t.kaynak_sayisi} kaynak`;
+      const bantlar = el("div", "ds-bantlar", satir);
+      t.bantlar.forEach((b) => {
+        const h = el("div", `ds-hucre seviye-${b.seviye}${b.pik ? " pik" : ""}`, bantlar);
+        h.textContent = b.dolu_dk ? `%${b.doluluk_yuzde} · ×${b.bant_carpan}` : "";
+        h.title = `${t.tur} ${b.bant}\n${b.dolu_dk}/${b.kapasite_dk} dk dolu (%${b.doluluk_yuzde}) → bant çarpanı ×${b.bant_carpan}` +
+          (b.pik ? `\nPik saat: enerji yoğun türde ×${b.pik_carpan}` : "");
+      });
+    });
   }
 
   function maxLane(rezervasyonlar) {
