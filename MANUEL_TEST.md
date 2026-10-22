@@ -100,7 +100,7 @@ Her adımda şu soruları yanıtla ve bulduklarını buraya ekle:
 ## 5. İlk manuel testte bulunanlar (20.10.2026)
 
 19 işlemin tamamı PDF'teki sonuçlarla eşleşti. Kullanılabilirlik açısından
-düzeltilecekler, önem sırasıyla. **1–5 düzeltildi** (20.10.2026):
+düzeltilecekler, önem sırasıyla. **1–5 düzeltildi** (20.10.2026); **7, 8, 12–23 düzeltildi** (22.10.2026):
 
 | # | Nerede | Sorun | Neden önemli |
 |---|---|---|---|
@@ -110,8 +110,40 @@ düzeltilecekler, önem sırasıyla. **1–5 düzeltildi** (20.10.2026):
 | ✅ 4 | Talep formu | Onaydan sonra form aynı değerlerle kalıyor ve hemen kırmızı KESISME gösteriyor | Kullanıcı yanlış bir şey yaptığını sanabilir |
 | ✅ 5 | Paket sonucu | Kalem kalem ücretler (48, 8) gösterilmiyor, yalnızca toplam var | PDF sonucunda `ucretler` alanı var |
 | 6 | Kullanıcı paneli | Rezervasyon durumu yalnızca renkli noktayla belli, yazı yok; paket bilgisi yok | Renk körlüğü ve okunabilirlik |
-| 7 | Kullanıcı ekleme | Yeni eklenen kullanıcı otomatik seçilmiyor | Ekleyen kişi büyük ihtimalle hemen onun adına işlem yapacak |
-| 8 | Günlük | Uzun kodlar kesiliyor (`ZAMAN_ADIMI_HATA…`) | Okunabilirlik |
+| ✅ 7 | Kullanıcı ekleme | Yeni eklenen kullanıcı otomatik seçilmiyor | Ekleyen kişi büyük ihtimalle hemen onun adına işlem yapacak |
+| ✅ 8 | Günlük | Uzun kodlar kesiliyor (`ZAMAN_ADIMI_HATA…`) | Okunabilirlik |
 | 9 | Ret önerileri | ZAMAN_ADIMI_HATASI ve ILERI_TARIH_SINIRI'nda öneri çıkmıyor | "En yakın geçerli saat 13:15" gibi bir öneri işe yarar |
 | 10 | Fiyat sor | Düğmenin ne işe yaradığı belli değil, tahmini ücretle aynı görünüyor | Ya daha ikincil yapılmalı ya da açıklama eklenmeli |
 | 11 | Açılış | Son kullanılan dosyalar listesi yok; her açılışta dosyayı yeniden seçmek gerekiyor | Analiz belgesinde planlanmış ama yapılmamış |
+| ✅ 12 | Kullanıcı ekleme | GECERSIZ_DEGER mesajı genel; hangi alanın (bakiye mi güvenilirlik mi) yanlış olduğunu söylemiyor | Kullanıcı tahmin etmek zorunda kalıyor |
+| ✅ 13 | Geri al | Reddedilen komutları da geri alıyor; ekranda hiçbir şey değişmiyor, yalnızca günlük satırı kayboluyor | "Düğme çalışmadı" izlenimi |
+| ✅ 14 | Ret mesajı | İzinli rolü olmayan kaynakta "yalnızca şu rollere açık: hiçbir rol" yazıyor | Bozuk Türkçe |
+| ✅ 15 | Geri al | Geri alınan kaynak formda seçili kalıyor ve BULUNAMADI gösteriyor | Form kaynak listesini yenilemiyor |
+| ✅ 16 | Geri al | Geri alınan işlemin sonuç kutusu ekranda kalıyor; neyin geri alındığı söylenmiyor | Eski ve yanlış geri bildirim |
+| ✅ 17 | Paket | "+ kalem ekle" 4'te, "− son kalemi sil" 2'de duruyor; PAKET_BOYUTU arayüzden üretilemiyor | "Arayüz engellemez" ilkesine aykırı |
+| ✅ 18 | Paket reddi | Kalem satırlarında açıklama var, hata kodu yok | PDF çıktısında her kalemin kodu var |
+| ✅ 19 | Paket formu | Geçersiz kalem varken yalnızca geçerli kalemlerin toplamı "tahmini ücret" olarak gösteriliyor | Paket hiç alınmayacakken ücret gösteriyor |
+| ✅ 20 | Dosya değiştirme | Önceki dosyadan kalan sonuç kutusu yeni dosya yüklenince ekranda kalıyor | Eski ve yanlış geri bildirim |
+| ✅ 21 | Dosya değiştirme | Form Paket modundaysa yeni dosyada tek kalemli bir "paket" olarak kalıyor | Gönderilirse kazara PAKET_BOYUTU reddi |
+| ✅ 22 | Saate git | Tarih alanı her zaman simüle saatin gününü öneriyor; takvimde ileri bir güne gidilmişse o gün önerilmeli | Testte 15.03 yerine 08.03 00:00 gönderildi, SAAT_GERI alındı |
+| ✅ 23 | Saate git | SAAT_GERI mesajı yalnızca "Saat geri alınamaz" diyor; şu anki saati ve istenen saati göstermiyor | Kullanıcı hatasını göremiyor |
+| 24 | Kullanıcı ekleme | Kimlik boş bırakılırsa çekirdek kullanıcıyı `""` kimliğiyle ekliyor (PDF boş kimlik için bir kural tanımlamıyor) | Karar gerekli: çekirdekte GECERSIZ_DEGER mi, yoksa forumda sormak mı |
+
+Demo için hazırlık dosyası: `testler/demo/baslangic_degistirilmis.json` — örnek dosyanın kopyası;
+CIHAZ `temel_ucret` 16 → 20 ve ARASTIRMACI `ileri_gun` 14 → 2.
+
+## 6. Kendi eklediğimiz özellikler (demo için)
+
+PDF'in istemediği, arayüze eklenen özellikler. Hepsi iş kuralını modülden alır.
+
+| Özellik | Nerede | Gösterilecek şey |
+|---|---|---|
+| Ücret dökümü | Talep formu → "Nasıl hesaplandı?" | Ücretin bant bant hesabı: doluluk, bant ve pik çarpanı, yuvarlama (K5) |
+| Doluluk ısı şeridi | Takvimin üstü | Her türün iki saatlik bantlardaki doluluğu ve bant çarpanı; ucuz saatler bir bakışta |
+| Akıllı öneriler | Ret kutusu ve form | Uygun saatler ve aynı saatte uygun kaynaklar, tek tıkla forma uygulanır |
+| Bağlama göre ret açıklaması | Ret kutusu | Hangi rezervasyonla çakıştığı, hazırlığın ne zaman bittiği, hangi alanın geçersiz olduğu |
+| Sürükleyerek talep | Takvim | Boş alana sürükle → form dolar |
+| İptal önizlemesi | Rezervasyon kartı | İptal etmeden önce iade oranı ve güvenilirlik etkisi |
+| Geri al | Üst bar, ⌘Z | Son değişikliği geri alır ve neyin geri alındığını söyler |
+| Zamanı oynat / sonraki olay | Takvim, üst bar | Saat akıcı ilerler; bir sonraki olay anına atlanır |
+| Tema, kısayollar, günlük filtresi | Çeşitli | Açık/koyu tema, klavye kısayolları, günlükte arama |
