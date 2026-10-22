@@ -17,8 +17,8 @@ Python standart kütüphanesini kullanan bir **çekirdek modül** ile bu
 dinamik doluluğa dayalı ücretlendirme, haftalık kota, paket rezervasyon,
 bekleme listesi ve olay tabanlı durum makinesi olmak üzere on bir kural
 grubunu uygular. Doğruluk, projenin sağladığı 19 komutluk kabul senaryosu
-üzerinde **alan alan birebir eşleşme** (19/19) ile ve beş özgün senaryo
-ile 95 otomatik testle doğrulanmıştır. Ücret hesabı `fractions.Fraction`
+üzerinde **alan alan birebir eşleşme** (19/19) ile ve sekiz özgün senaryo
+ile 117 otomatik testle doğrulanmıştır. Ücret hesabı `fractions.Fraction`
 ile kesin aritmetikle yapılmış, kayan nokta hatası tamamen ortadan
 kaldırılmıştır.
 
@@ -164,9 +164,10 @@ Türkçe açıklamasını her zaman çekirdek üretir.
 |---|---:|---|
 | E-destek kabul senaryosu (19 komut) | 19/19 | alan alan birebir eşleşme |
 | API eşdeğerlik testi (GUI fonksiyonları) | 19/19 | CLI ile birebir aynı |
-| Özgün senaryolar (`testler/senaryolar/`) | 5 klasör | tümü geçti |
-| Birim testleri (K1–K11 uç durumları) | 71 | tümü geçti |
-| **Toplam** | **95** | **95/95 geçti** |
+| Özgün senaryolar (`testler/senaryolar/`) | 8 klasör, 110 komut | tümü geçti |
+| GUI duman testi (`Oturum` üzerinden 19 işlem) | 3 | tümü geçti |
+| Birim testleri (K1–K11 uç durumları) | 104 | tümü geçti |
+| **Toplam (pytest)** | **117** | **117/117 geçti** |
 
 Özgün senaryolar sırasıyla şunları hedefler: (01) bant sınırını aşan
 talepler ve doluluk eşiğinin tam 0,25 sınırındaki davranışı; (02) bekleme
@@ -174,7 +175,13 @@ listesi sıralamasının güncel güvenilirliğe göre değişebilmesi ve bir
 terfinin aynı taramadaki diğer kayıtları etkilemesi; (03) paketin altı
 adımlı denetim sırasının tamamı; (04) haftalık sıfırlamanın bakiyeyi
 *eklemek* değil *eşitlemek* olduğu ve bir iade kotanın üstüne taşarsa
-kırpıldığı; (05) ekleme komutlarının 3 adımlı doğrulama sırası. Her
+kırpıldığı; (05) ekleme komutlarının 3 adımlı doğrulama sırası; (06)
+giriş/çıkış/gelmeme/tamamlanma durum makinesi, giriş penceresinin iki
+sınırı ve erken çıkışın bitişi güncellediği; (07) K10'un 13 adımının
+her biri ve birden çok kural ihlal edildiğinde ilk adımın kodunun döndüğü;
+(08) iptal iadesinin üç kademesi, `bekleme` komutunun tüm sonuçları ve
+süresi geçen bekleme kaydının sessizce silindiği. Böylece dokümandaki
+bütün hata kodları en az bir özgün senaryoda yer alır. Her
 senaryonun beklenen değerleri elle hesaplanmış ve `ACIKLAMA.md`
 dosyasında gerekçelendirilmiştir.
 
@@ -226,7 +233,7 @@ Proje, dokümanda tanımlanan on bir kural grubunun tamamını
 parametreleştirilmiş, yalnızca standart kütüphane kullanan bir çekirdekte
 uygulamış ve bunu hem CLI hem de PySide6 tabanlı bir masaüstü uygulaması
 üzerinden **aynı kod yoluyla** sunmuştur. 19 komutluk kabul senaryosunun
-birebir geçmesi ve beş özgün senaryo ile toplam 95 otomatik testin yeşil
+birebir geçmesi ve sekiz özgün senaryo ile toplam 117 otomatik testin yeşil
 olması, kural uygulamasının doğruluğuna güçlü bir kanıt sunar. Geliştirme
 için öneriler: çoklu kullanıcı eşzamanlılığı (şu an tek iş parçacıklı
 varsayılıyor), kalıcı depolama katmanı ve bekleme listesi için tahmini

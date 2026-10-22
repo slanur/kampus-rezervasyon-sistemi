@@ -1,0 +1,23 @@
+{"no": 1, "komut": "rezervasyon", "durum": "RED", "kod": "BULUNAMADI"}
+{"no": 2, "komut": "rezervasyon", "durum": "RED", "kod": "BULUNAMADI"}
+{"no": 3, "komut": "rezervasyon", "durum": "RED", "kod": "ZAMAN_ADIMI_HATASI"}
+{"no": 4, "komut": "rezervasyon", "durum": "RED", "kod": "ZAMAN_ADIMI_HATASI"}
+{"no": 5, "komut": "rezervasyon", "durum": "RED", "kod": "GECMIS_ZAMAN"}
+{"no": 6, "komut": "rezervasyon", "durum": "RED", "kod": "CALISMA_SAATI_DISI"}
+{"no": 7, "komut": "rezervasyon", "durum": "RED", "kod": "CALISMA_SAATI_DISI"}
+{"no": 8, "komut": "rezervasyon", "durum": "RED", "kod": "SURE_SINIRI"}
+{"no": 9, "komut": "rezervasyon", "durum": "RED", "kod": "SURE_SINIRI"}
+{"no": 10, "komut": "rezervasyon", "durum": "RED", "kod": "ILERI_TARIH_SINIRI"}
+{"no": 11, "komut": "rezervasyon", "durum": "RED", "kod": "ILERI_TARIH_SINIRI"}
+{"no": 12, "komut": "rezervasyon", "durum": "TAMAM", "rezervasyon_id": "r1", "ucret": 2, "bakiye": 118}
+{"no": 13, "komut": "rezervasyon", "durum": "RED", "kod": "ROL_IZNI_YOK"}
+{"no": 14, "komut": "rezervasyon", "durum": "RED", "kod": "SERTIFIKA_YOK"}
+{"no": 15, "komut": "rezervasyon", "durum": "RED", "kod": "BAKIM"}
+{"no": 16, "komut": "rezervasyon", "durum": "TAMAM", "rezervasyon_id": "r2", "ucret": 18, "bakiye": 102}
+{"no": 17, "komut": "rezervasyon", "durum": "RED", "kod": "KESISME"}
+{"no": 18, "komut": "rezervasyon", "durum": "RED", "kod": "HAZIRLIK_IHLALI"}
+{"no": 19, "komut": "rezervasyon", "durum": "RED", "kod": "ARDISIK_KULLANIM"}
+{"no": 20, "komut": "rezervasyon", "durum": "RED", "kod": "BAKIYE_YETERSIZ"}
+{"no": 21, "komut": "fiyat", "durum": "TAMAM", "ucret": 18}
+{"no": 22, "komut": "sorgu", "durum": "TAMAM", "doluluk": [{"baslangic": "2027-03-08T12:00", "bitis": "2027-03-08T13:00", "tur": "BAKIM"}, {"baslangic": "2027-03-08T13:00", "bitis": "2027-03-08T14:00", "tur": "REZERVASYON", "rezervasyon": "r2"}]}
+{"no": 23, "komut": "sorgu", "durum": "TAMAM", "bakiye": 102, "guvenilirlik": 80, "rezervasyonlar": [{"id": "r2", "kaynak": "YAZ-1", "baslangic": "2027-03-08T13:00", "bitis": "2027-03-08T14:00", "durum": "ONAYLI", "ucret": 18}]}

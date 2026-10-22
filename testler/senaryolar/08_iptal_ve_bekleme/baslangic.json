@@ -1,0 +1,63 @@
+{
+  "saat": "2027-03-08T08:00",
+  "kaynak_turleri": {
+    "ODA": {
+      "hazirlik_dk": 0,
+      "temel_ucret": 4,
+      "enerji_yogun": false,
+      "sertifika": null
+    }
+  },
+  "roller": {
+    "OGRENCI": {
+      "haftalik_kota": 120,
+      "ileri_gun": 7,
+      "azami_sure_dk": 180
+    }
+  },
+  "kaynaklar": [
+    {
+      "id": "ODA-1",
+      "ad": "Toplantı Odası 1",
+      "tur": "ODA",
+      "izinli_roller": [
+        "OGRENCI"
+      ]
+    },
+    {
+      "id": "ODA-2",
+      "ad": "Toplantı Odası 2",
+      "tur": "ODA",
+      "izinli_roller": [
+        "OGRENCI"
+      ]
+    }
+  ],
+  "bakim_pencereleri": [],
+  "kullanicilar": [
+    {
+      "id": "u1",
+      "ad": "Ayşe Kaya",
+      "rol": "OGRENCI",
+      "sertifikalar": [],
+      "bakiye": 120,
+      "guvenilirlik": 80
+    },
+    {
+      "id": "u2",
+      "ad": "Mehmet Demir",
+      "rol": "OGRENCI",
+      "sertifikalar": [],
+      "bakiye": 120,
+      "guvenilirlik": 70
+    },
+    {
+      "id": "u3",
+      "ad": "Zeynep Ak",
+      "rol": "OGRENCI",
+      "sertifikalar": [],
+      "bakiye": 120,
+      "guvenilirlik": 90
+    }
+  ]
+}
