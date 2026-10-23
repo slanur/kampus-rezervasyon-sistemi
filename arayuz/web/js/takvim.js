@@ -6,7 +6,7 @@
 window.Takvim = (function () {
   const SAAT_BAS = 8, SAAT_BIT = 22;
   const TOPLAM_DK = (SAAT_BIT - SAAT_BAS) * 60;
-  const SOL_GENISLIK = 176;
+  const SOL_GENISLIK = 150;
   const LANE_YUKSEKLIK = 34;
   const KUTU_YUKSEKLIK = 30;
 
@@ -127,7 +127,8 @@ window.Takvim = (function () {
     const id = el("div", "kaynak-id", etiket); id.textContent = k.kaynak;
     const ad = el("div", "kaynak-ad", etiket); ad.textContent = `${k.ad || ""} · ${k.tur}`;
 
-    const lanes = maxLane(k.rezervasyonlar || []);
+    // Bekleme kayıtları rezervasyonların üstüne binmesin diye en altta kendi satırlarında çizilir.
+    const lanes = maxLane(k.rezervasyonlar || []) + ((k.bekleme_kayitlari || []).length ? 1 : 0);
     const yukseklik = lanes * LANE_YUKSEKLIK + 10;
 
     const serit = el("div", "kaynak-serit grid-15", satir);
@@ -156,7 +157,8 @@ window.Takvim = (function () {
     });
 
     (k.rezervasyonlar || []).forEach((r) => cizRezervasyon(r, serit, genislik));
-    (k.bekleme_kayitlari || []).forEach((bk) => cizBekleme(bk, serit, genislik));
+    const beklemeSatiri = maxLane(k.rezervasyonlar || []);
+    (k.bekleme_kayitlari || []).forEach((bk) => cizBekleme(bk, serit, genislik, beklemeSatiri));
   }
 
   // Yalnızca "şimdi" çizgisini taşır; oynatma modunda her karede çağrılır.
@@ -206,13 +208,14 @@ window.Takvim = (function () {
     kutu.addEventListener("mouseleave", () => Tooltip.gizle());
   }
 
-  function cizBekleme(bk, serit, genislik) {
+  function cizBekleme(bk, serit, genislik, satir) {
     const b1 = Math.max(0, zamanDk(bk.baslangic, gunIso) ?? 0);
     const b2 = Math.min(TOPLAM_DK, zamanDk(bk.bitis, gunIso) ?? TOPLAM_DK);
     const x1 = dkDenX(b1, genislik), x2 = dkDenX(b2, genislik);
     const kutu = el("div", "bekleme-kutu", serit);
-    kutu.style.cssText = `left:${x1 - SOL_GENISLIK}px; width:${Math.max(4, x2 - x1)}px;`;
-    if (x2 - x1 > 50) kutu.textContent = `${bk.id} · sıra ${bk.sira}`;
+    kutu.style.cssText = `left:${x1 - SOL_GENISLIK}px; width:${Math.max(4, x2 - x1)}px; top:${5 + satir * LANE_YUKSEKLIK}px;`;
+    if (x2 - x1 > 34) kutu.textContent = `${bk.id} #${bk.sira}`;
+    kutu.title = `Bekleme ${bk.id} · ${bk.kullanici || ""} · ${bk.baslangic.slice(11)}–${bk.bitis.slice(11)} · sıra ${bk.sira}`;
   }
 
   function kurEtkilesim(genislik) {
@@ -230,8 +233,8 @@ window.Takvim = (function () {
       serit.addEventListener("pointerdown", (ev) => {
         if (ev.target.closest(".rez-kutu")) return;
         const dk = konumBul(serit, ev.clientX);
-        const dkYuvarlanmis = Math.round(dk / 15) * 15;
-        surukleme = { kaynakId, serit, dk1: dkYuvarlanmis, dk2: dkYuvarlanmis + 15 };
+        const dkHucre = Math.min(TOPLAM_DK - 15, Math.floor(dk / 15) * 15); // tıklanan 15 dk hücresi
+        surukleme = { kaynakId, serit, dk1: dkHucre, dk2: dkHucre + 15, suruklendi: false };
         serit.setPointerCapture(ev.pointerId);
       });
 
@@ -240,6 +243,7 @@ window.Takvim = (function () {
         const dk = konumBul(serit, ev.clientX);
         let dkYuvarlanmis = Math.round(dk / 15) * 15;
         dkYuvarlanmis = Math.max(dkYuvarlanmis, surukleme.dk1 + 15);
+        if (dkYuvarlanmis !== surukleme.dk2) surukleme.suruklendi = true;
         surukleme.dk2 = dkYuvarlanmis;
         if (!onizlemeEl) onizlemeEl = el("div", "surukleme-onizleme", serit);
         const x1 = dkDenX(Math.min(surukleme.dk1, surukleme.dk2), genislik);
@@ -249,10 +253,16 @@ window.Takvim = (function () {
 
       function bitir() {
         if (!surukleme || surukleme.serit !== serit) return;
-        const { kaynakId: kid, dk1, dk2 } = surukleme;
+        const { kaynakId: kid, dk1, dk2, suruklendi } = surukleme;
         surukleme = null;
         if (onizlemeEl) { onizlemeEl.remove(); onizlemeEl = null; }
-        const dkBas = Math.min(dk1, dk2), dkBit = Math.max(dk1, dk2 === dk1 ? dk1 + 15 : dk2);
+        // Sürüklenmeden yapılan tek tıklama, formun varsayılanı gibi 1 saatlik bir aralık önerir;
+        // 15 dakikalık bir "tıklama aralığı" hep geçersiz olurdu. Gün sonuna taşarsa geriye kaydırılır.
+        let dkBas = Math.min(dk1, dk2), dkBit = Math.max(dk1, dk2);
+        if (!suruklendi) {
+          dkBit = Math.min(TOPLAM_DK, dkBas + 60);
+          dkBas = Math.max(0, dkBit - 60);
+        }
         const taban = new Date(gunIso + "T00:00:00");
         const b = new Date(taban.getTime() + (SAAT_BAS * 60 + dkBas) * 60000);
         const e = new Date(taban.getTime() + (SAAT_BAS * 60 + dkBit) * 60000);

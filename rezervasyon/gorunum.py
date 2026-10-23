@@ -40,7 +40,8 @@ def parametreler(depo: Depo) -> dict:
 
 def kullanicilar(depo: Depo) -> list[dict]:
     return [
-        {"id": u.id, "ad": u.ad, "rol": u.rol, "bakiye": u.bakiye, "guvenilirlik": u.guvenilirlik}
+        {"id": u.id, "ad": u.ad, "rol": u.rol, "sertifikalar": list(u.sertifikalar),
+         "bakiye": u.bakiye, "guvenilirlik": u.guvenilirlik}
         for u in depo.kullanicilar.values()
     ]
 
