@@ -175,3 +175,10 @@ def test_izinli_rolu_olmayan_kaynakta_ret_aciklamasi_duzgun():
     m.kaynak_ekle("ODA-9", "Kapalı Oda", "ODA", [])
     metin = m.red_aciklamasi("u1", "ODA-9", "2027-03-08T09:00", "2027-03-08T10:00", "ROL_IZNI_YOK")
     assert "hiçbir role açık değil" in metin
+
+
+def test_kullanici_listesi_sertifikalari_icerir():
+    m = motor()
+    kullanicilar = {u["id"]: u for u in m.kullanicilar()}
+    assert kullanicilar["u3"]["sertifikalar"] == ["CIHAZ_EGITIMI", "LAB_GUVENLIK"]
+    assert kullanicilar["u1"]["sertifikalar"] == []

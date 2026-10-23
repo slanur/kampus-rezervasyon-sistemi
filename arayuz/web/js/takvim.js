@@ -233,8 +233,8 @@ window.Takvim = (function () {
       serit.addEventListener("pointerdown", (ev) => {
         if (ev.target.closest(".rez-kutu")) return;
         const dk = konumBul(serit, ev.clientX);
-        const dkYuvarlanmis = Math.round(dk / 15) * 15;
-        surukleme = { kaynakId, serit, dk1: dkYuvarlanmis, dk2: dkYuvarlanmis + 15 };
+        const dkHucre = Math.min(TOPLAM_DK - 15, Math.floor(dk / 15) * 15); // tıklanan 15 dk hücresi
+        surukleme = { kaynakId, serit, dk1: dkHucre, dk2: dkHucre + 15, suruklendi: false };
         serit.setPointerCapture(ev.pointerId);
       });
 
@@ -243,6 +243,7 @@ window.Takvim = (function () {
         const dk = konumBul(serit, ev.clientX);
         let dkYuvarlanmis = Math.round(dk / 15) * 15;
         dkYuvarlanmis = Math.max(dkYuvarlanmis, surukleme.dk1 + 15);
+        if (dkYuvarlanmis !== surukleme.dk2) surukleme.suruklendi = true;
         surukleme.dk2 = dkYuvarlanmis;
         if (!onizlemeEl) onizlemeEl = el("div", "surukleme-onizleme", serit);
         const x1 = dkDenX(Math.min(surukleme.dk1, surukleme.dk2), genislik);
@@ -252,10 +253,16 @@ window.Takvim = (function () {
 
       function bitir() {
         if (!surukleme || surukleme.serit !== serit) return;
-        const { kaynakId: kid, dk1, dk2 } = surukleme;
+        const { kaynakId: kid, dk1, dk2, suruklendi } = surukleme;
         surukleme = null;
         if (onizlemeEl) { onizlemeEl.remove(); onizlemeEl = null; }
-        const dkBas = Math.min(dk1, dk2), dkBit = Math.max(dk1, dk2 === dk1 ? dk1 + 15 : dk2);
+        // Sürüklenmeden yapılan tek tıklama, formun varsayılanı gibi 1 saatlik bir aralık önerir;
+        // 15 dakikalık bir "tıklama aralığı" hep geçersiz olurdu. Gün sonuna taşarsa geriye kaydırılır.
+        let dkBas = Math.min(dk1, dk2), dkBit = Math.max(dk1, dk2);
+        if (!suruklendi) {
+          dkBit = Math.min(TOPLAM_DK, dkBas + 60);
+          dkBas = Math.max(0, dkBit - 60);
+        }
         const taban = new Date(gunIso + "T00:00:00");
         const b = new Date(taban.getTime() + (SAAT_BAS * 60 + dkBas) * 60000);
         const e = new Date(taban.getTime() + (SAAT_BAS * 60 + dkBit) * 60000);

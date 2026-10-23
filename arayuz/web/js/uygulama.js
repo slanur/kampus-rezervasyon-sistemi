@@ -111,7 +111,10 @@
 
   async function tumunuYenile() {
     await Promise.all([ustBarYenile(), takvimYenile(), kullaniciPaneliYenile(), gunlukYenile(), rezDetayYenile(), kullanicilariDoldur(), formKaynaklariniTazele()]);
-    if (S.formVarsayilan && !S.sonOnay && S.mod === "tek") await varsayilanKalemler();
+    // Dokunulmamış formun önerisi yalnızca saat ilerlediyse yenilenir; bir ret
+    // ekranı yenilediğinde form (ve ret mesajı) olduğu gibi kalır.
+    const simdi = await K.cagir("simdi");
+    if (S.formVarsayilan && !S.sonOnay && S.mod === "tek" && simdi !== S.varsayilanSimdi) await varsayilanKalemler();
     else fiyatlariGuncelleGecikmeli();
   }
 
@@ -668,7 +671,6 @@
     const ad = document.createElement("b");
     ad.textContent = kullanici ? kullanici.ad : S.seciliKullanici;
     kim.append(ad, " adına");
-    $("kp-rol").textContent = kullanici ? kullanici.rol : "";
     const kota = kullanici && parametreler.roller[kullanici.rol] ? parametreler.roller[kullanici.rol].haftalik_kota : null;
 
     $("kp-bakiye").innerHTML = `${sonuc.bakiye} ${kota ? `<small>/ ${kota} KP</small>` : ""}`;
@@ -676,8 +678,20 @@
     $("kp-guven").innerHTML = `${sonuc.guvenilirlik} <small>/ 100</small>`;
     $("kp-guven-bar").style.width = `${Math.max(0, Math.min(100, sonuc.guvenilirlik))}%`;
 
-    $("kp-sertifikalar").innerHTML = (kullanici && kullanici.sertifikalar ? kullanici.sertifikalar : [])
-      .map((c) => `<span class="sertifika-cip">${c}</span>`).join("");
+    // Rol seçicide yazıyor; burada rezervasyonu doğrudan etkileyen sertifikalar gösterilir.
+    const sertKutu = $("kp-sertifikalar");
+    sertKutu.innerHTML = "";
+    const sertler = kullanici && kullanici.sertifikalar ? kullanici.sertifikalar : [];
+    const sertEtiket = document.createElement("span");
+    sertEtiket.className = "sertifika-etiket";
+    sertEtiket.textContent = sertler.length ? "Sertifika" : "Sertifika yok";
+    sertKutu.appendChild(sertEtiket);
+    sertler.forEach((c) => {
+      const cip = document.createElement("span");
+      cip.className = "sertifika-cip";
+      cip.textContent = c;
+      sertKutu.appendChild(cip);
+    });
 
     const rezListe = $("kp-rezliste");
     rezListe.innerHTML = sonuc.rezervasyonlar.length === 0 ? '<p class="liste-bos">Yok</p>' : "";
@@ -723,8 +737,9 @@
     }
     S.kalemler = [{ kaynak, bas, bit }];
     kalemleriCiz();
-    formDegisti();
+    formDegisti(false);
     S.formVarsayilan = true;
+    S.varsayilanSimdi = await K.cagir("simdi");
   }
 
   async function varsayilanSaatAraligi() {
@@ -905,9 +920,12 @@
   }
 
   // Kullanıcı formu değiştirdi: "onaylandı" görünümünden çık, ücreti yeniden hesapla.
-  function formDegisti() {
+  // Kullanıcı formu değiştirdi: "onaylandı" görünümünden çık, eski sonuç kutusunu kaldır
+  // (sonuç günlükte duruyor), ücreti yeniden hesapla. Otomatik doldurmada sonuç korunur.
+  function formDegisti(kullaniciDegistirdi = true) {
     S.sonOnay = null;
     S.formVarsayilan = false;
+    if (kullaniciDegistirdi) sonucKapat();
     fiyatlariGuncelleGecikmeli();
   }
 
