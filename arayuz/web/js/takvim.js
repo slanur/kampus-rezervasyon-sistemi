@@ -6,7 +6,7 @@
 window.Takvim = (function () {
   const SAAT_BAS = 8, SAAT_BIT = 22;
   const TOPLAM_DK = (SAAT_BIT - SAAT_BAS) * 60;
-  const SOL_GENISLIK = 176;
+  const SOL_GENISLIK = 150;
   const LANE_YUKSEKLIK = 34;
   const KUTU_YUKSEKLIK = 30;
 
@@ -127,7 +127,8 @@ window.Takvim = (function () {
     const id = el("div", "kaynak-id", etiket); id.textContent = k.kaynak;
     const ad = el("div", "kaynak-ad", etiket); ad.textContent = `${k.ad || ""} · ${k.tur}`;
 
-    const lanes = maxLane(k.rezervasyonlar || []);
+    // Bekleme kayıtları rezervasyonların üstüne binmesin diye en altta kendi satırlarında çizilir.
+    const lanes = maxLane(k.rezervasyonlar || []) + ((k.bekleme_kayitlari || []).length ? 1 : 0);
     const yukseklik = lanes * LANE_YUKSEKLIK + 10;
 
     const serit = el("div", "kaynak-serit grid-15", satir);
@@ -156,7 +157,8 @@ window.Takvim = (function () {
     });
 
     (k.rezervasyonlar || []).forEach((r) => cizRezervasyon(r, serit, genislik));
-    (k.bekleme_kayitlari || []).forEach((bk) => cizBekleme(bk, serit, genislik));
+    const beklemeSatiri = maxLane(k.rezervasyonlar || []);
+    (k.bekleme_kayitlari || []).forEach((bk) => cizBekleme(bk, serit, genislik, beklemeSatiri));
   }
 
   // Yalnızca "şimdi" çizgisini taşır; oynatma modunda her karede çağrılır.
@@ -206,13 +208,14 @@ window.Takvim = (function () {
     kutu.addEventListener("mouseleave", () => Tooltip.gizle());
   }
 
-  function cizBekleme(bk, serit, genislik) {
+  function cizBekleme(bk, serit, genislik, satir) {
     const b1 = Math.max(0, zamanDk(bk.baslangic, gunIso) ?? 0);
     const b2 = Math.min(TOPLAM_DK, zamanDk(bk.bitis, gunIso) ?? TOPLAM_DK);
     const x1 = dkDenX(b1, genislik), x2 = dkDenX(b2, genislik);
     const kutu = el("div", "bekleme-kutu", serit);
-    kutu.style.cssText = `left:${x1 - SOL_GENISLIK}px; width:${Math.max(4, x2 - x1)}px;`;
-    if (x2 - x1 > 50) kutu.textContent = `${bk.id} · sıra ${bk.sira}`;
+    kutu.style.cssText = `left:${x1 - SOL_GENISLIK}px; width:${Math.max(4, x2 - x1)}px; top:${5 + satir * LANE_YUKSEKLIK}px;`;
+    if (x2 - x1 > 34) kutu.textContent = `${bk.id} #${bk.sira}`;
+    kutu.title = `Bekleme ${bk.id} · ${bk.kullanici || ""} · ${bk.baslangic.slice(11)}–${bk.bitis.slice(11)} · sıra ${bk.sira}`;
   }
 
   function kurEtkilesim(genislik) {

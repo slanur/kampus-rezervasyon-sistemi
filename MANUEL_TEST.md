@@ -109,7 +109,7 @@ düzeltilecekler, önem sırasıyla. **1–5 düzeltildi** (20.10.2026); **7, 8,
 | ✅ 3 | Saat ilerletme sonucu | Olayların saati (10:15, 11:15) ve OTOMATIK_ATAMA'daki yeni bakiye yazmıyor | PDF olaylarda `zaman` ve `bakiye` alanlarını istiyor |
 | ✅ 4 | Talep formu | Onaydan sonra form aynı değerlerle kalıyor ve hemen kırmızı KESISME gösteriyor | Kullanıcı yanlış bir şey yaptığını sanabilir |
 | ✅ 5 | Paket sonucu | Kalem kalem ücretler (48, 8) gösterilmiyor, yalnızca toplam var | PDF sonucunda `ucretler` alanı var |
-| 6 | Kullanıcı paneli | Rezervasyon durumu yalnızca renkli noktayla belli, yazı yok; paket bilgisi yok | Renk körlüğü ve okunabilirlik |
+| ✅ 6 | Kullanıcı paneli | Rezervasyon durumu yalnızca renkli noktayla belli, yazı yok; paket bilgisi yok | Renk körlüğü ve okunabilirlik |
 | ✅ 7 | Kullanıcı ekleme | Yeni eklenen kullanıcı otomatik seçilmiyor | Ekleyen kişi büyük ihtimalle hemen onun adına işlem yapacak |
 | ✅ 8 | Günlük | Uzun kodlar kesiliyor (`ZAMAN_ADIMI_HATA…`) | Okunabilirlik |
 | 9 | Ret önerileri | ZAMAN_ADIMI_HATASI ve ILERI_TARIH_SINIRI'nda öneri çıkmıyor | "En yakın geçerli saat 13:15" gibi bir öneri işe yarar |
@@ -147,3 +147,4 @@ PDF'in istemediği, arayüze eklenen özellikler. Hepsi iş kuralını modülden
 | Geri al | Üst bar, ⌘Z | Son değişikliği geri alır ve neyin geri alındığını söyler |
 | Zamanı oynat / sonraki olay | Takvim, üst bar | Saat akıcı ilerler; bir sonraki olay anına atlanır |
 | Tema, kısayollar, günlük filtresi | Çeşitli | Açık/koyu tema, klavye kısayolları, günlükte arama |
+| İki sütunlu düzen | Tüm ekran | Takvim, seçili rezervasyon ve talep formu kaydırmadan aynı anda görünür (ölçüt 2); sonuçlar işlemin yanında çıkar (ölçüt 4) |
